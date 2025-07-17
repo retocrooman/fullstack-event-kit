@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "monorepo-ts-template",
+  "name": "fullstack-event-kit",
   "scripts": {
     "setup": "pnpm i && pnpm run rebuild && git config --local core.hooksPath .githooks && pnpm run setup:db && pnpm run setup:api",
     "setup:db": "docker compose -f dockers/docker-compose.yaml up -d --force-recreate",
