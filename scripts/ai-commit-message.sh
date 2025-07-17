@@ -12,10 +12,19 @@ check_ollama() {
 generate_prompt() {
   files=$(git diff --cached --name-only | tr '\n' ' ')
   diffstat=$(git diff --cached --stat)
-  git diff --cached --unified=3 > /tmp/git-diff.txt
+  git diff --cached --unified=3 | head -c 30000 > /tmp/git-diff.txt
+  diffcontent=$(cat /tmp/git-diff.txt)
 
   cat <<EOF
-You are a developer. Create a short Git commit message.
+Generate a Git commit message.
+
+Respond with only the message in this exact format:
+<type>: <description>
+
+No preamble. No explanation. No quotation marks. No extra lines.
+
+Use types: feat, fix, chore, doc, test, refactor
+Use present tense. No trailing period.
 
 Changed files:
 $files
@@ -23,14 +32,8 @@ $files
 Diff summary:
 $diffstat
 
-Partial diff content:
-/tmp/git-diff.txt
-
-Rules:
-- Format: <type>: <description>
-- Types: fix, feat, chore, doc, refactor, test, etc.
-- Use present tense, no period
-- Output only the commit message
+Diff content:
+$diffcontent
 EOF
 }
 
