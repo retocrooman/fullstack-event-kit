@@ -12,6 +12,7 @@ check_ollama() {
 generate_prompt() {
   files=$(git diff --cached --name-only | tr '\n' ' ')
   diffstat=$(git diff --cached --stat)
+  git diff --cached --unified=3 > /tmp/git-diff.txt
 
   cat <<EOF
 You are a developer. Create a short Git commit message.
@@ -21,6 +22,9 @@ $files
 
 Diff summary:
 $diffstat
+
+Partial diff content:
+/tmp/git-diff.txt
 
 Rules:
 - Format: <type>: <description>
