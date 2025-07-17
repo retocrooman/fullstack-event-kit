@@ -1,0 +1,11 @@
+### Health Check - Basic
+GET http://localhost:8080/health-check
+Content-Type: application/json
+
+###
+
+### Health Check - Database
+GET http://localhost:8080/health-check/db
+Content-Type: application/json
+
+###

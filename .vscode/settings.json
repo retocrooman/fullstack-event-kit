@@ -1,0 +1,16 @@
+{
+  // Basic settings
+  "editor.formatOnSave": true,
+
+  // Set the default formatter to Prettier
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  // ESLint settings
+  "eslint.workingDirectories": [{ "mode": "auto" }],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // cSpell settings
+  "cSpell.words": ["deepseek", "ollama"]
+}

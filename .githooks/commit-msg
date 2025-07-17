@@ -1,0 +1,14 @@
+#!/bin/sh
+# stop on error
+set -e
+
+# check commit message
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat $COMMIT_MSG_FILE)
+echo "Commit message: $COMMIT_MSG"
+PREFIXES="fix: |feat: |config: |refactor: |remove: |revert: |doc: |test: |build: |ci: |chore: |change: "
+if ! echo "$COMMIT_MSG" | grep -qE "^($PREFIXES)"; then
+  echo "Invalid commit message. Please follow the format: <type>: <message>"
+  echo "type: $PREFIXES"
+  exit 1
+fi

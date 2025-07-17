@@ -1,0 +1,12 @@
+#!/bin/sh
+# stop on error
+set -e
+
+# check if there are changes in packages
+# Packages require a build before commit to ensure that types are up to date
+if git diff --cached --name-only | grep -q "^packages"; then
+  echo "Building for packages ..."
+  pnpm run build
+else
+  echo "No changes detected in packages"
+fi

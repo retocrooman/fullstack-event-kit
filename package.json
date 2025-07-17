@@ -1,0 +1,53 @@
+{
+  "private": true,
+  "name": "monorepo-ts-template",
+  "scripts": {
+    "setup": "pnpm i && pnpm run rebuild && git config --local core.hooksPath .githooks && pnpm run setup:db && pnpm run setup:api",
+    "setup:db": "docker compose -f dockers/docker-compose.yaml up -d --force-recreate",
+    "setup:api": "pnpm run api db:push",
+    "remove-node-modules": "sh scripts/remove-node-modules.sh",
+    "reset-docker": "sh scripts/reset-docker.sh",
+    "kill-port": "sh -c 'lsof -t -i:$1 | xargs -r kill -9' _",
+    "api": "pnpm --filter api",
+    "web": "pnpm --filter web",
+    "build": "turbo run build",
+    "rebuild": "turbo run build --force",
+    "test:container": "sh scripts/docker.test.sh",
+    "git:ai-commit": "sh scripts/ai-commit-message.sh",
+    "git:push": "sh scripts/push.sh",
+    "git:log": "git log --pretty=format:'%s'",
+    "tag:web": "sh scripts/release-tag.sh web",
+    "tag:api": "sh scripts/release-tag.sh api",
+    "release:patch": "pnpm run tag:web patch && pnpm run tag:api patch && pnpm run git:push",
+    "release:minor": "pnpm run tag:web minor && pnpm run tag:api minor && pnpm run git:push",
+    "release:major": "pnpm run tag:web major && pnpm run tag:api major && pnpm run git:push",
+    "stg-release:patch": "pnpm run tag:web patch stg && pnpm run tag:api patch stg && pnpm run git:push",
+    "stg-release:minor": "pnpm run tag:web minor stg && pnpm run tag:api minor stg && pnpm run git:push",
+    "stg-release:major": "pnpm run tag:web major stg && pnpm run tag:api major stg && pnpm run git:push"
+  },
+  "devDependencies": {
+    "turbo": "^2.4.0"
+  },
+  "prettier": {
+    "arrowParens": "avoid",
+    "bracketSpacing": true,
+    "htmlWhitespaceSensitivity": "css",
+    "insertPragma": false,
+    "bracketSameLine": false,
+    "jsxSingleQuote": true,
+    "printWidth": 120,
+    "proseWrap": "preserve",
+    "quoteProps": "as-needed",
+    "requirePragma": false,
+    "semi": true,
+    "singleQuote": true,
+    "tabWidth": 2,
+    "trailingComma": "all",
+    "useTabs": false
+  },
+  "engines": {
+    "pnpm": ">=10.2.0",
+    "node": ">=23.6.0"
+  },
+  "packageManager": "pnpm@10.3.0"
+}
