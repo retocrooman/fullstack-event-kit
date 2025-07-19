@@ -41,22 +41,22 @@ This document outlines the development tasks needed to implement the enhanced fe
 
 ### 2.2 Authentication Module (better-auth)
 
-- [ ] Install better-auth backend dependencies
-  - [ ] Add `better-auth` dependency
-  - [ ] Add `better-auth/adapters/prisma` for database integration
-- [ ] Create authentication module
-  - [ ] `src/auth/auth.module.ts`
-  - [ ] `src/auth/auth.controller.ts`
-  - [ ] `src/auth/auth.service.ts`
-  - [ ] `src/auth/auth.config.ts`
-- [ ] Configure authentication providers
-  - [ ] Email/password authentication
-  - [ ] OAuth providers (Google, GitHub)
-  - [ ] JWT token management
-- [ ] Create authentication guards and decorators
-  - [ ] `src/auth/guards/auth.guard.ts`
-  - [ ] `src/auth/decorators/current-user.decorator.ts`
-  - [ ] `src/auth/decorators/roles.decorator.ts`
+- [x] Install better-auth backend dependencies
+  - [x] Add `better-auth` dependency
+  - [x] Add `better-auth/adapters/prisma` for database integration
+- [x] Create authentication module
+  - [x] `src/auth/auth.module.ts`
+  - [x] `src/auth/auth.controller.ts`
+  - [x] `src/auth/auth.service.ts`
+  - [x] `src/auth/auth.config.ts`
+- [x] Configure authentication providers
+  - [x] Email/password authentication
+  - [x] OAuth providers (Google, GitHub)
+  - [x] JWT token management
+- [x] Create authentication guards and decorators
+  - [x] `src/auth/guards/auth.guard.ts`
+  - [x] `src/auth/decorators/current-user.decorator.ts`
+  - [x] `src/auth/decorators/roles.decorator.ts`
 
 ### 2.3 User Domain with CQRS
 
@@ -227,6 +227,26 @@ This document outlines the development tasks needed to implement the enhanced fe
 - [ ] Add metrics collection
 - [ ] Implement error tracking
 - [ ] Add performance monitoring
+
+### 5.5 Event-Driven Architecture with NATS
+
+- [ ] Implement NATS microservices communication
+  - [ ] Install `@nestjs/microservices` in both API and Auth servers
+  - [ ] Install `nats` client library
+  - [ ] Configure NATS server in Docker Compose
+- [ ] Create user registration event flow
+  - [ ] Auth server: Emit `UserRegistered` event when user is created
+  - [ ] API server: Listen for `UserRegistered` event and create local user record
+  - [ ] Add event patterns and message contracts
+- [ ] Implement event-driven user synchronization
+  - [ ] `src/auth/events/user-registered.event.ts` (Auth server)
+  - [ ] `src/users/events/user-registered.listener.ts` (API server)
+  - [ ] Add proper error handling and retry logic
+  - [ ] Implement idempotency for event processing
+- [ ] Add NATS configuration
+  - [ ] Environment variables for NATS connection
+  - [ ] Health checks for NATS connectivity
+  - [ ] Graceful shutdown handling
 
 ## Phase 6: Production Readiness
 
