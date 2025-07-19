@@ -1,0 +1,200 @@
+### Auth Server Testing - Lucia Auth Implementation (Port 4000)
+# This file tests the dedicated NestJS Auth server with Lucia Auth
+# 
+# ✅ FULLY IMPLEMENTED ENDPOINTS:
+# - POST /auth/register - User registration
+# - POST /auth/login - User login (returns JWT)
+# - GET /auth/me - Get current user info (JWT required)
+# - GET /auth/session - Validate session & get user info (JWT required)
+# - POST /auth/logout - Logout & invalidate session (JWT required)
+# - GET /auth/health - Health check
+#
+# Current Architecture:
+# - Separate Auth Server (port 4000) using Lucia Auth + JWT
+# - Main API Server (port 8080) validates JWT tokens
+# - Auth Server handles user registration and authentication
+# - API Server handles protected resources with JWT validation
+#
+# Requirements:
+# 1. Start auth server: pnpm --filter auth start:dev (port 4000)
+# 2. Start API server: pnpm api start:dev (port 8080)
+# 3. Start database: pnpm setup:db
+# 4. Test authentication flow: register → login → get JWT → use with API
+
+### Variables
+@authUrl = http://localhost:4000
+@apiUrl = http://localhost:8080
+@webUrl = http://localhost:3000
+@contentType = application/json
+
+###
+### 🔐 CORE AUTHENTICATION ENDPOINTS
+###
+
+### 1. Register new user
+# @name register
+POST {{authUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "auth@example.com",
+  "password": "AuthPassword123!",
+  "name": "Auth Test User"
+}
+
+### 2. Login user and get JWT token
+# @name login
+POST {{authUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "auth@example.com",
+  "password": "AuthPassword123!"
+}
+
+### Extract JWT token from login response (actual Lucia Auth structure)
+@jwt_token = {{login.response.body.jwt}}
+
+###
+### 👤 PROTECTED USER ENDPOINTS (JWT Required)
+###
+
+### 3. Get current user profile
+GET {{authUrl}}/auth/me
+Authorization: Bearer {{jwt_token}}
+
+### 4. Validate session and get user info
+GET {{authUrl}}/auth/session
+Authorization: Bearer {{jwt_token}}
+
+### 5. Logout user (invalidates session)
+POST {{authUrl}}/auth/logout
+Authorization: Bearer {{jwt_token}}
+
+###
+### 🏥 HEALTH & MONITORING
+###
+
+### 6. Auth server health check
+GET {{authUrl}}/auth/health
+
+###
+### 🔗 JWT TOKEN VERIFICATION WITH API SERVER
+###
+
+### 7. Test API server endpoint availability
+GET {{apiUrl}}/users/me
+
+### 8. Test JWT token with API server - get all users (no auth required currently)
+GET {{apiUrl}}/users
+
+### 9. Test specific user by ID (Note: user may not exist in API DB due to separate databases)
+# GET {{apiUrl}}/users/{{userId}}
+# Authorization: Bearer {{jwt_token}}
+
+###
+### ⚠️ ARCHITECTURE NOTE:
+### Currently, the auth server and API server use separate databases.
+### Users created in auth server don't automatically exist in API server.
+### This will be resolved with NATS event-driven synchronization (see TODO.md)
+###
+
+###
+### 👥 MULTI-USER TESTING
+###
+
+### 10. Register second user
+POST {{authUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "auth2@example.com",
+  "password": "AuthPassword456!",
+  "name": "Second Auth User"
+}
+
+### 11. Login second user
+# @name login2
+POST {{authUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "auth2@example.com", 
+  "password": "AuthPassword456!"
+}
+
+### Extract second user's JWT
+@jwt_token2 = {{login2.response.body.jwt}}
+
+### 12. Test second user's profile
+GET {{authUrl}}/auth/me
+Authorization: Bearer {{jwt_token2}}
+
+### 13. Logout second user
+POST {{authUrl}}/auth/logout
+Authorization: Bearer {{jwt_token2}}
+
+###
+### 🔮 FUTURE FEATURES (Not Yet Implemented)
+###
+
+### Password change (planned)
+# PUT {{authUrl}}/auth/password
+# Authorization: Bearer {{jwt_token}}
+# Content-Type: {{contentType}}
+# 
+# {
+#   "currentPassword": "AuthPassword123!",
+#   "newPassword": "NewPassword123!"
+# }
+
+### Email verification (planned)
+# POST {{authUrl}}/auth/verify-email
+# Content-Type: {{contentType}}
+# 
+# {
+#   "token": "verification_token_here"
+# }
+
+### Password reset request (planned)
+# POST {{authUrl}}/auth/reset-password
+# Content-Type: {{contentType}}
+# 
+# {
+#   "email": "auth@example.com"
+# }
+
+### Refresh JWT token (planned)
+# POST {{authUrl}}/auth/refresh
+# Authorization: Bearer {{jwt_token}}
+
+### Get all user sessions (planned)
+# GET {{authUrl}}/auth/sessions
+# Authorization: Bearer {{jwt_token}}
+
+### Invalidate all sessions (planned)
+# DELETE {{authUrl}}/auth/sessions
+# Authorization: Bearer {{jwt_token}}
+
+###
+### 📋 TESTING SUMMARY - POSITIVE FLOW ONLY
+###
+### ✅ CORE AUTHENTICATION (6):
+### 1-2: Register & Login (POST /auth/register, /auth/login)
+### 3-4: User Info & Session (GET /auth/me, /auth/session)  
+### 5: Logout (POST /auth/logout)
+### 6: Health Check (GET /auth/health)
+###
+### 👥 MULTI-USER TESTING (4):
+### 10-13: Second user registration, login, profile, logout
+###
+### 🔮 FUTURE FEATURES (Planned):
+### Password change, email verification, password reset, refresh tokens, session management
+###
+### 📊 TOTAL TESTS: 13 positive flow test cases
+### All tests verify successful authentication workflows and expected responses
+###
+### 📖 For implementation details, see:
+### - /apps/auth/src/auth/auth.controller.ts
+### - /apps/auth/src/auth/auth.service.ts
+### - TODO.md (NATS event-driven user synchronization)

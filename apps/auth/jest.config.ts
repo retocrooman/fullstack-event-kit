@@ -9,10 +9,12 @@ const config: Config = {
     {
       displayName: 'unit',
       preset: 'ts-jest',
-      testEnvironment: '@quramy/jest-prisma-node/environment',
+      testEnvironment: 'node',
       testMatch: ['<rootDir>/src/**/*.spec.ts'],
       collectCoverageFrom: ['src/**/*.ts', '!src/**/*.spec.ts', '!src/main.ts'],
-      transformIgnorePatterns: ['node_modules/(?!(.*\\.mjs$|jose))'],
+      transformIgnorePatterns: [
+        'node_modules/(?!(.*\\.mjs$|jose))',
+      ],
       setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
     },
     // E2E tests configuration
@@ -32,7 +34,6 @@ const config: Config = {
       moduleNameMapper: {
         '^src/(.*)$': '<rootDir>/src/$1',
       },
-      setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
     },
   ],
 };

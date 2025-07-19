@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException, ConflictException, Inject } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { DuplicateResourceException, ResourceNotFoundException } from '../../shared/exceptions/business-exception';
 import { CreateUserDto, UserResponseDto } from '../dto/user.dto';
-import { UserEntity, CreateUserData, UpdateUserData } from '../entities/user.entity';
+import { UserEntity, UpdateUserData } from '../entities/user.entity';
 import { IUserRepository } from '../interfaces/user-repository.interface';
 import { UserMapper } from '../mappers/user.mapper';
 
@@ -8,28 +9,11 @@ import { UserMapper } from '../mappers/user.mapper';
 export class UserService {
   constructor(@Inject(IUserRepository) private readonly userRepository: IUserRepository) {}
 
-  async createUser(createUserDto: CreateUserDto): Promise<UserResponseDto> {
-    // Check if user with email already exists
-    const existingUser = await this.userRepository.findByEmail(createUserDto.email);
-    if (existingUser) {
-      throw new ConflictException('User with this email already exists');
-    }
 
-    // Convert DTO to domain data using pure function
-    const createUserData: CreateUserData = {
-      name: createUserDto.name,
-      email: createUserDto.email,
-      age: createUserDto.age,
-    };
-
-    const user = await this.userRepository.create(createUserData);
-    return UserMapper.toResponseDto(user);
-  }
-
-  async getUserById(id: number): Promise<UserResponseDto> {
+  async getUserById(id: string): Promise<UserResponseDto> {
     const user = await this.userRepository.findById(id);
     if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new ResourceNotFoundException('User', id);
     }
     return UserMapper.toResponseDto(user);
   }
@@ -39,18 +23,18 @@ export class UserService {
     return UserMapper.toResponseDtoArray(users);
   }
 
-  async updateUser(id: number, updateData: Partial<CreateUserDto>): Promise<UserResponseDto> {
+  async updateUser(id: string, updateData: Partial<CreateUserDto>): Promise<UserResponseDto> {
     // Check if user exists
     const existingUser = await this.userRepository.findById(id);
     if (!existingUser) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new ResourceNotFoundException('User', id);
     }
 
     // Check if email is being updated and if it conflicts with another user
     if (updateData.email && UserEntity.hasEmailChanged(existingUser, updateData.email)) {
       const userWithEmail = await this.userRepository.findByEmail(updateData.email);
       if (userWithEmail) {
-        throw new ConflictException('User with this email already exists');
+        throw new DuplicateResourceException('User', 'email', updateData.email || existingUser.email);
       }
     }
 
@@ -65,12 +49,4 @@ export class UserService {
     return UserMapper.toResponseDto(updatedUser);
   }
 
-  async deleteUser(id: number): Promise<void> {
-    const existingUser = await this.userRepository.findById(id);
-    if (!existingUser) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
-
-    await this.userRepository.delete(id);
-  }
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Param, Put, Body } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateUserDto, UserResponseDto } from './dto/user.dto';
 import { UserService } from './services/user.service';
@@ -8,38 +8,27 @@ import { UserService } from './services/user.service';
 export class UsersController {
   constructor(private readonly userService: UserService) {}
 
-  @Post()
-  @ApiOperation({ summary: 'Create a new user' })
-  @ApiBody({ type: CreateUserDto })
-  @ApiResponse({
-    status: 201,
-    description: 'User created successfully',
-    type: UserResponseDto,
-  })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 409, description: 'User with this email already exists' })
-  async createUser(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
-    return this.userService.createUser(createUserDto);
-  }
+  // NOTE: User creation should be done via auth server (port 4000)
+  // This API server handles profile management for authenticated users only
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get user by ID' })
-  @ApiParam({ name: 'id', description: 'User ID', type: 'number' })
+  @ApiOperation({ summary: 'Get user profile by ID' })
+  @ApiParam({ name: 'id', description: 'User ID', type: 'string' })
   @ApiResponse({
     status: 200,
-    description: 'User found',
+    description: 'User profile found',
     type: UserResponseDto,
   })
   @ApiResponse({ status: 404, description: 'User not found' })
-  async getUserById(@Param('id', ParseIntPipe) id: number): Promise<UserResponseDto> {
+  async getUserById(@Param('id') id: string): Promise<UserResponseDto> {
     return this.userService.getUserById(id);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all users' })
+  @ApiOperation({ summary: 'Get all users (admin functionality)' })
   @ApiResponse({
     status: 200,
-    description: 'List of users',
+    description: 'List of user profiles',
     type: [UserResponseDto],
   })
   async getAllUsers(): Promise<UserResponseDto[]> {
@@ -47,32 +36,31 @@ export class UsersController {
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update user by ID' })
-  @ApiParam({ name: 'id', description: 'User ID', type: 'number' })
+  @ApiOperation({ summary: 'Update user profile by ID' })
+  @ApiParam({ name: 'id', description: 'User ID', type: 'string' })
   @ApiBody({ type: CreateUserDto })
   @ApiResponse({
     status: 200,
-    description: 'User updated successfully',
+    description: 'User profile updated successfully',
     type: UserResponseDto,
   })
   @ApiResponse({ status: 404, description: 'User not found' })
   @ApiResponse({ status: 409, description: 'User with this email already exists' })
-  async updateUser(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateUserDto: Partial<CreateUserDto>,
-  ): Promise<UserResponseDto> {
+  async updateUser(@Param('id') id: string, @Body() updateUserDto: Partial<CreateUserDto>): Promise<UserResponseDto> {
     return this.userService.updateUser(id, updateUserDto);
   }
 
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete user by ID' })
-  @ApiParam({ name: 'id', description: 'User ID', type: 'number' })
-  @ApiResponse({
-    status: 204,
-    description: 'User deleted successfully',
-  })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  async deleteUser(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.userService.deleteUser(id);
-  }
+  // TODO: Add JWT-protected endpoints
+  // @Get('me')
+  // @UseGuards(AuthGuard)
+  // async getCurrentUser(@Request() req): Promise<UserResponseDto> {
+  //   return this.userService.getUserById(req.user.id);
+  // }
+
+  // @Put('me')  
+  // @UseGuards(AuthGuard)
+  // async updateCurrentUser(@Request() req, @Body() updateUserDto: Partial<CreateUserDto>): Promise<UserResponseDto> {
+  //   return this.userService.updateUser(req.user.id, updateUserDto);
+  // }
+
 }

@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/api-client"
+  output   = "../node_modules/.prisma/auth-client"
 }
 
 datasource db {
@@ -15,9 +15,22 @@ model User {
   emailVerified Boolean  @default(false)
   name          String?
   image         String?
-  age           Int?
+  password      String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  sessions Session[]
+
   @@map("user")
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
 }

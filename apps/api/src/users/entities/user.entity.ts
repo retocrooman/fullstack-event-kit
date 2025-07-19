@@ -1,23 +1,29 @@
 // Immutable User state as JSON object
 export interface User {
-  readonly id: number;
-  readonly name: string;
+  readonly id: string;
+  readonly name: string | null;
   readonly email: string;
-  readonly age: number;
+  readonly age: number | null;
+  readonly emailVerified: boolean;
+  readonly image: string | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
 
 export interface CreateUserData {
-  readonly name: string;
+  readonly name?: string;
   readonly email: string;
-  readonly age: number;
+  readonly age?: number;
+  readonly emailVerified?: boolean;
+  readonly image?: string;
 }
 
 export interface UpdateUserData {
   readonly name?: string;
   readonly email?: string;
   readonly age?: number;
+  readonly emailVerified?: boolean;
+  readonly image?: string;
 }
 
 // Pure functions for User operations
@@ -28,6 +34,8 @@ export const UserEntity = {
     name: prismaUser.name,
     email: prismaUser.email,
     age: prismaUser.age,
+    emailVerified: prismaUser.emailVerified,
+    image: prismaUser.image,
     createdAt: prismaUser.createdAt,
     updatedAt: prismaUser.updatedAt,
   }),

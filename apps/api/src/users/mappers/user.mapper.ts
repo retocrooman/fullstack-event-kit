@@ -5,9 +5,9 @@ export class UserMapper {
   static toResponseDto(user: User): UserResponseDto {
     return {
       id: user.id,
-      name: user.name,
+      name: user.name ?? undefined,
       email: user.email,
-      age: user.age,
+      age: user.age ?? undefined,
       createdAt: user.createdAt,
     };
   }

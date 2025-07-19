@@ -1,11 +1,62 @@
-### Health Check - Basic
-GET http://localhost:8080/health-check
-Content-Type: application/json
+### Health Check API Testing
+# This file tests health check and monitoring endpoints
+# 
+# Requirements:
+# - API Server running on port 8080
+# - Database running for DB health check
+
+### Variables
+@apiUrl = http://localhost:8080
+@authUrl = http://localhost:4000
 
 ###
+### API SERVER HEALTH CHECKS
+###
 
-### Health Check - Database
-GET http://localhost:8080/health-check/db
-Content-Type: application/json
+### Check API server basic health
+GET {{apiUrl}}/health-check
+
+### Check database connectivity
+GET {{apiUrl}}/health-check/db
+
+### Get API server root endpoint
+GET {{apiUrl}}/
+
+### Get API documentation (Swagger)
+GET {{apiUrl}}/api-docs
 
 ###
+### AUTH SERVER HEALTH CHECKS
+###
+
+### Check auth server health
+GET {{authUrl}}/health
+
+### Get auth server root endpoint
+GET {{authUrl}}/
+
+###
+### MONITORING ENDPOINTS (Future Implementation)
+###
+
+### Get server metrics
+# GET {{apiUrl}}/metrics
+
+### Get server info
+# GET {{apiUrl}}/info
+
+### Get server status
+# GET {{apiUrl}}/status
+
+###
+### PERFORMANCE MONITORING (Future Implementation)
+###
+
+### Get performance stats
+# GET {{apiUrl}}/stats
+
+### Get active connections
+# GET {{apiUrl}}/connections
+
+### Get request statistics
+# GET {{apiUrl}}/requests/stats

@@ -1,0 +1,113 @@
+### Users API Testing - Profile Management Endpoints
+# This file tests user profile management on the API server
+# 
+# IMPORTANT: User registration should be done via auth.http (auth server)
+# This API server handles profile management for already authenticated users
+#
+# Requirements:
+# - API Server running on port 8080
+# - Auth Server running on port 4000
+# - Database running (pnpm setup:db)
+# - JWT token from auth.http login response
+
+### Variables
+@apiUrl = http://localhost:8080
+@contentType = application/json
+# Get JWT token from auth.http login response
+@jwt_token = your_jwt_token_here
+
+###
+### CURRENT ENDPOINTS (Temporary - should be JWT protected)
+###
+
+### Get all users (admin functionality)
+GET {{apiUrl}}/users
+
+### Get user by ID
+GET {{apiUrl}}/users/replace_with_actual_id
+
+###
+### JWT PROTECTED ENDPOINTS (Future Implementation)
+###
+
+### Get current user profile (requires JWT from auth server)
+# GET {{apiUrl}}/users/me
+# Authorization: Bearer {{jwt_token}}
+
+### Update current user profile (requires JWT)
+# PUT {{apiUrl}}/users/me
+# Authorization: Bearer {{jwt_token}}
+# Content-Type: {{contentType}}
+# 
+# {
+#   "name": "Updated Name",
+#   "age": 32,
+#   "bio": "Updated bio information"
+# }
+
+### Upload user avatar (requires JWT)
+# POST {{apiUrl}}/users/me/avatar
+# Authorization: Bearer {{jwt_token}}
+# Content-Type: multipart/form-data
+
+### Delete current user account (requires JWT)
+# DELETE {{apiUrl}}/users/me
+# Authorization: Bearer {{jwt_token}}
+
+### Get user preferences (requires JWT)
+# GET {{apiUrl}}/users/me/preferences
+# Authorization: Bearer {{jwt_token}}
+
+### Update user preferences (requires JWT)
+# PUT {{apiUrl}}/users/me/preferences
+# Authorization: Bearer {{jwt_token}}
+# Content-Type: {{contentType}}
+# 
+# {
+#   "theme": "dark",
+#   "language": "en",
+#   "notifications": true
+# }
+
+###
+### ADMIN ENDPOINTS (Future Implementation - requires admin JWT)
+###
+
+### Get all users with pagination (admin only)
+# GET {{apiUrl}}/admin/users?page=1&limit=10
+# Authorization: Bearer {{jwt_token}}
+
+### Get user by ID (admin only)
+# GET {{apiUrl}}/admin/users/{{userId}}
+# Authorization: Bearer {{jwt_token}}
+
+### Update user by ID (admin only)
+# PUT {{apiUrl}}/admin/users/{{userId}}
+# Authorization: Bearer {{jwt_token}}
+# Content-Type: {{contentType}}
+# 
+# {
+#   "name": "Admin Updated Name",
+#   "age": 30,
+#   "active": true
+# }
+
+### Deactivate user account (admin only)
+# DELETE {{apiUrl}}/admin/users/{{userId}}
+# Authorization: Bearer {{jwt_token}}
+
+###
+### NOTE: User Registration Flow
+###
+
+# 1. User registers via auth server (auth.http):
+#    POST http://localhost:4000/auth/register
+#    { "email": "user@example.com", "password": "password", "name": "User Name" }
+#
+# 2. User logs in via auth server (auth.http):
+#    POST http://localhost:4000/auth/login
+#    { "email": "user@example.com", "password": "password" }
+#
+# 3. Get JWT token from login response
+#
+# 4. Use JWT token for API server profile management (this file)

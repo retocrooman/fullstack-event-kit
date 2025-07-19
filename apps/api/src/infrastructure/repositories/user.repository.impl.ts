@@ -14,7 +14,7 @@ export class UserRepositoryImpl implements IUserRepository {
     return UserEntity.fromPrisma(user);
   }
 
-  async findById(id: number): Promise<User | null> {
+  async findById(id: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({
       where: { id },
     });
@@ -35,7 +35,7 @@ export class UserRepositoryImpl implements IUserRepository {
     return users.map(user => UserEntity.fromPrisma(user));
   }
 
-  async update(id: number, data: UpdateUserData): Promise<User> {
+  async update(id: string, data: UpdateUserData): Promise<User> {
     const user = await this.prisma.user.update({
       where: { id },
       data,
@@ -43,7 +43,7 @@ export class UserRepositoryImpl implements IUserRepository {
     return UserEntity.fromPrisma(user);
   }
 
-  async delete(id: number): Promise<User> {
+  async delete(id: string): Promise<User> {
     const user = await this.prisma.user.delete({
       where: { id },
     });

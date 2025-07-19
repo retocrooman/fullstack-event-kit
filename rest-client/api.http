@@ -1,7 +1,60 @@
-### API Root Endpoint
-GET http://localhost:8080/
+### API Server Testing - Overview and Quick Start
+# This is the main index file for API server testing
+# The tests have been organized into separate files by functionality
+#
+# API Server Port: 8080
+# Auth Server Port: 4000
+# Database Port: 5433
+#
+# Quick Start:
+# 1. Start database: pnpm setup:db
+# 2. Start API server: PORT=8080 pnpm --filter api start:dev
+# 3. Start auth server: pnpm --filter auth start:dev (if needed)
+# 4. Use the appropriate .http file for your testing needs
 
-### Example with headers
-# GET http://localhost:8080/
-# Content-Type: application/json
-# Authorization: Bearer your-token-here
+### Available Test Files:
+
+## auth.http
+# - Authentication server endpoints (port 4000)
+# - User registration and login
+# - JWT token generation
+# - Authentication error scenarios
+
+## users.http
+# - User management CRUD operations
+# - Batch user creation
+# - Future protected endpoints
+
+## health.http
+# - Health check endpoints
+# - Database connectivity checks
+# - Server status monitoring
+# - Future monitoring endpoints
+
+## integration-testing.http
+# - Complete user lifecycle testing
+# - Multi-user workflow scenarios
+# - Batch user creation and session management
+# - Cross-service integration testing
+# - Future NATS event-driven synchronization tests
+
+### Common Variables
+@apiUrl = http://localhost:8080
+@authUrl = http://localhost:4000
+@contentType = application/json
+
+###
+### QUICK TESTS
+###
+
+### Test API server is running
+GET {{apiUrl}}/health-check
+
+### Test auth server is running
+GET {{authUrl}}/health
+
+### Get all users (quick check)
+GET {{apiUrl}}/users
+
+### API Documentation (Swagger)
+GET {{apiUrl}}/api-docs
