@@ -3,6 +3,8 @@ import { hash, verify } from '@node-rs/argon2';
 import { SignJWT, importPKCS8, jwtVerify, importSPKI } from 'jose';
 import { PrismaClient } from '../../node_modules/.prisma/auth-client';
 import { EnvConfig } from '../config/env.config';
+import { UserCreatedEvent } from '../events/domain/user-created.event';
+import { EventPublisherService } from '../events/services/event-publisher.service';
 import { RegisterDto, LoginDto, AuthResponseDto, SessionValidationResponseDto, LogoutResponseDto } from './dto/auth.dto';
 import { lucia } from './lucia.config';
 
@@ -10,7 +12,7 @@ import { lucia } from './lucia.config';
 export class AuthService {
   private prisma: PrismaClient;
 
-  constructor() {
+  constructor(private readonly eventPublisher: EventPublisherService) {
     this.prisma = new PrismaClient();
   }
 
@@ -39,6 +41,24 @@ export class AuthService {
       },
     });
 
+    // Publish user created event
+    const userCreatedEvent = new UserCreatedEvent(
+      user.id,
+      {
+        userId: user.id,
+        email: user.email,
+        name: user.name || undefined,
+        emailVerified: user.emailVerified,
+        createdAt: user.createdAt,
+      },
+      {
+        source: 'auth-service',
+        action: 'user.register',
+      },
+    );
+
+    await this.eventPublisher.publishEvent(userCreatedEvent);
+
     const session = await lucia.createSession(user.id, {});
     const jwt = await this.createJWT(user, session);
 
@@ -46,7 +66,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        name: user.name || undefined,
         emailVerified: user.emailVerified,
         image: user.image,
       },
@@ -85,7 +105,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        name: user.name || undefined,
         emailVerified: user.emailVerified,
         image: user.image,
       },
@@ -141,7 +161,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        name: user.name || undefined,
         emailVerified: user.emailVerified,
         image: user.image,
         age: user.age,

@@ -34,3 +34,32 @@ model Session {
 
   @@map("session")
 }
+
+model OutboxEvent {
+  id            String            @id @default(cuid())
+  aggregateId   String
+  aggregateType String
+  eventType     String
+  eventData     Json
+  eventVersion  Int               @default(1)
+  occurredAt    DateTime
+  processedAt   DateTime?
+  publishedAt   DateTime?
+  retryCount    Int               @default(0)
+  lastError     String?
+  status        OutboxEventStatus @default(PENDING)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([status, createdAt])
+  @@index([aggregateId, aggregateType])
+  @@map("outbox_event")
+}
+
+enum OutboxEventStatus {
+  PENDING
+  PROCESSING
+  PUBLISHED
+  FAILED
+  DEAD_LETTER
+}

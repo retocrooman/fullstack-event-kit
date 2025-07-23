@@ -139,7 +139,8 @@ pnpm web <command>  # Run command in Web workspace
 - **API Server**: http://localhost:8080 (現在動作中)
 - **Web Application**: http://localhost:3000 (Next.js開発サーバー)
 - **Auth Server**: http://localhost:4000 (apps/auth - 独立認証サーバー)
-- **Database (PostgreSQL)**: localhost:5433
+- **Database (PostgreSQL)**: localhost:5433 (API), localhost:5434 (Auth)
+- **NATS Message Bus**: localhost:4222 (client), localhost:8222 (monitoring)
 - **Better Auth**: 実装予定 - API server port (8080) with `/auth/*` routes
 
 ## Code Style and Conventions
@@ -233,14 +234,18 @@ The project uses the following Prettier settings:
 
 **CRITICAL**: Before completing ANY code change task, you MUST:
 
-1. Run all relevant tests: `pnpm api test`
+1. Run all relevant tests: `pnpm api test` or `pnpm auth test`
 2. Run E2E tests if applicable: `pnpm api test:e2e`
-3. Verify ALL tests pass
-4. If tests fail, fix issues and re-run until all pass
-5. Never mark a task complete with failing tests
-6. **IMPORTANT**: Continue fixing until ALL tests pass - no exceptions
-7. **BUILD VERIFICATION**: After tests pass, run `pnpm api build` and ensure build succeeds
-8. If build fails, fix all TypeScript/compilation errors and rebuild
+3. **LINT VERIFICATION**: Run linting for the workspace you modified:
+   - For API changes: `pnpm api lint`
+   - For Auth changes: `pnpm auth lint`
+   - For Web changes: `pnpm web lint`
+4. Verify ALL tests pass and ALL lint checks pass
+5. If tests or linting fail, fix issues and re-run until all pass
+6. Never mark a task complete with failing tests or lint errors
+7. **IMPORTANT**: Continue fixing until ALL tests and linting pass - no exceptions
+8. **BUILD VERIFICATION**: After tests and lint pass, run `pnpm api build` or `pnpm auth build` and ensure build succeeds
+9. If build fails, fix all TypeScript/compilation errors and rebuild
 
 ### Test Structure
 
@@ -329,34 +334,47 @@ pnpm i                    # Install dependencies
 
 # Development
 pnpm api start:dev        # Start API in watch mode
+pnpm auth start:dev       # Start auth server in watch mode
 pnpm web dev             # Start web app in dev mode
 
 # Building
 pnpm build               # Build all packages
 pnpm rebuild             # Force rebuild all packages
 pnpm api build           # Build API only
+pnpm auth build          # Build auth server only
 pnpm web build           # Build web only
 
 # Testing
 pnpm api test            # Run API tests
+pnpm auth test           # Run auth server tests
 pnpm api test:e2e        # Run E2E tests
+pnpm auth test:e2e       # Run auth E2E tests
 pnpm api test:cov        # Run tests with coverage
+pnpm auth test:cov       # Run auth tests with coverage
 pnpm test:container      # Test Docker containers
 
 # Database
 pnpm api db:generate     # Generate Prisma client
+pnpm auth db:generate    # Generate auth Prisma client
 pnpm api db:push         # Push schema to database
+pnpm auth db:push        # Push auth schema to database
 pnpm api db:force-push   # Force push (data loss warning!)
+pnpm auth db:force-push  # Force push auth schema (data loss warning!)
 
 # Code Quality
 pnpm api lint            # Lint API code
+pnpm auth lint           # Lint auth code
 pnpm web lint            # Lint web code
 pnpm api format          # Format API code
+pnpm auth format         # Format auth code
 
 # Docker & Infrastructure
-pnpm setup:db            # Start database container
+pnpm setup:db            # Start database containers and NATS
 pnpm reset-docker        # Reset Docker containers
 pnpm kill-port 3000      # Kill process on port
+
+# NATS Monitoring
+# Access NATS monitoring at http://localhost:8222
 
 # Git Helpers
 pnpm git:ai-commit       # Generate commit message with AI
@@ -559,6 +577,57 @@ The project uses git hooks for automated quality checks instead of GitHub Action
 - ✅ Separate databases for security and application data
 - ❌ No user creation in API server
 - ❌ No password handling in API server
+
+### Event-Driven Architecture (NATS + Outbox Pattern)
+
+**Architecture Decision**: Reliable event publishing using transactional outbox pattern with NATS
+
+#### Message Bus Infrastructure
+
+**🔄 NATS Server** (Docker Container - Port 4222):
+- JetStream enabled for persistent messaging
+- Queue-based load balancing for consumers
+- HTTP monitoring dashboard on port 8222
+- Automatic failover and replay capabilities
+
+**📦 Outbox Pattern** (Auth Server):
+- Transactional event persistence in `outbox_event` table
+- Guaranteed at-least-once delivery
+- Automatic retry with exponential backoff
+- Dead letter queue for failed events
+- Background processor for async publishing
+
+#### Event Flow
+
+```
+1. Domain Operation (e.g., User Registration):
+   Auth Service → Save User + Save Event (same transaction)
+   
+2. Event Publishing:
+   Background Processor → Read Outbox → Publish to NATS → Mark as Published
+   
+3. Event Consumption:
+   API Server → Subscribe to NATS → Process Domain Events
+```
+
+#### Event Types
+
+- `auth.user.created`: Published when new user registers
+- Future events: `auth.user.updated`, `auth.user.deleted`, etc.
+
+#### Configuration
+
+Environment variables for NATS:
+- `NATS_HOST`: NATS server host (default: localhost)
+- `NATS_PORT`: NATS server port (default: 4222)
+- `OUTBOX_PROCESSING_INTERVAL_MS`: Event processing frequency (default: 5000ms)
+
+#### Key Benefits
+- ✅ Transactional integrity (outbox pattern)
+- ✅ High availability and scaling (NATS)
+- ✅ Event replay and persistence (JetStream)
+- ✅ Automatic retry and error handling
+- ✅ Monitoring and observability
 
 ### CQRS & Event Sourcing (Planned)
 

@@ -27,6 +27,25 @@ services:
       - auth-db-data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  # NATS Message Bus
+  nats:
+    image: nats:2.10.24-alpine
+    container_name: nats-server
+    ports:
+      - '4222:4222'  # Client connections
+      - '8222:8222'  # HTTP monitoring
+      - '6222:6222'  # Cluster connections
+    command: ['--js', '--sd', '/data']  # Enable JetStream and store data
+    volumes:
+      - nats-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'nc', '-z', 'localhost', '4222']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 volumes:
   api-db-data:
   auth-db-data:
+  nats-data:

@@ -1,6 +1,7 @@
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaClient } from '@prisma/client';
+import { EventPublisherService } from '../events/services/event-publisher.service';
 import { AuthService } from './auth.service';
 
 // Mock Prisma Client
@@ -15,6 +16,12 @@ const mockPrismaClient = {
     delete: jest.fn(),
     deleteMany: jest.fn(),
   },
+};
+
+// Mock EventPublisherService
+const mockEventPublisherService = {
+  publishEvent: jest.fn().mockResolvedValue(undefined),
+  publishEvents: jest.fn().mockResolvedValue(undefined),
 };
 
 // Mock Lucia
@@ -36,6 +43,10 @@ describe('AuthService', () => {
         {
           provide: PrismaClient,
           useValue: mockPrismaClient,
+        },
+        {
+          provide: EventPublisherService,
+          useValue: mockEventPublisherService,
         },
       ],
     }).compile();
