@@ -1,7 +1,16 @@
 #!/bin/bash
 set -e
 
+# Claude API is the preferred AI provider, fallback to Ollama if not available
+AI_PROVIDER=${AI_PROVIDER:-"claude"}
 MODEL=${OLLAMA_MODEL:-"llama3:instruct"}
+
+check_claude() {
+  if ! command -v claude >/dev/null 2>&1; then
+    echo "❌ Claude Code CLI not found. Please make sure Claude Code is running."
+    exit 1
+  fi
+}
 
 check_ollama() {
   command -v ollama >/dev/null || { echo "❌ Ollama not installed"; exit 1; }
@@ -16,15 +25,15 @@ generate_prompt() {
   diffcontent=$(cat /tmp/git-diff.txt)
 
   cat <<EOF
-Generate a Git commit message.
+Generate a Git commit message for the following changes.
 
-Respond with only the message in this exact format:
-<type>: <description>
-
-No preamble. No explanation. No quotation marks. No extra lines.
-
-Use types: feat, fix, chore, doc, test, refactor
-Use present tense. No trailing period.
+Requirements:
+- Use conventional commits format: <type>: <description>
+- Use present tense, imperative mood (e.g., "add feature" not "added feature")
+- No trailing period
+- Keep description under 72 characters
+- Use these types: feat, fix, chore, docs, test, refactor, style, perf, build, ci
+- Focus on WHAT changed and WHY, not HOW
 
 Changed files:
 $files
@@ -32,9 +41,19 @@ $files
 Diff summary:
 $diffstat
 
-Diff content:
+Diff content (truncated if large):
 $diffcontent
+
+Return only the commit message, no other text.
 EOF
+}
+
+
+call_claude() {
+  local prompt=$(generate_prompt)
+  
+  # Use Claude Code CLI to generate commit message
+  echo "$prompt" | claude -p | grep -E '^(feat|fix|docs|style|refactor|test|chore|perf|build|ci):' | head -1
 }
 
 call_ollama() {
@@ -62,17 +81,38 @@ interactive_commit() {
   fi
 }
 
+
+generate_ai_message() {
+  if [[ "$AI_PROVIDER" == "claude" ]]; then
+    if command -v claude >/dev/null 2>&1; then
+      check_claude
+      call_claude
+    else
+      echo "⚠️  Claude Code CLI not found, falling back to Ollama..."
+      AI_PROVIDER="ollama"
+      check_ollama
+      call_ollama
+    fi
+  else
+    check_ollama
+    call_ollama
+  fi
+}
+
 main() {
   # Check for --commit flag for backward compatibility
   [[ "$1" == "--commit" ]] && commit_flag=true
   
   # Check for --interactive or -i flag
   [[ "$1" == "--interactive" || "$1" == "-i" ]] && interactive_flag=true
+  
+  # Check for --ollama flag to force Ollama usage
+  [[ "$1" == "--ollama" ]] && AI_PROVIDER="ollama"
 
-  check_ollama
   git diff --cached --quiet && echo "❌ No staged changes" && exit 1
 
-  msg=$(call_ollama)
+  echo "🤖 Generating commit message with $AI_PROVIDER..."
+  msg=$(generate_ai_message)
   
   if [[ "$interactive_flag" = true ]]; then
     interactive_commit "$msg"

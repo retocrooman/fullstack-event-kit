@@ -377,7 +377,7 @@ pnpm kill-port 3000      # Kill process on port
 # Access NATS monitoring at http://localhost:8222
 
 # Git Helpers
-pnpm git:ai-commit       # Generate commit message with AI
+pnpm git:ai-commit       # Generate commit message with Claude Code (fallback to Ollama)
 pnpm git:push            # Push with tags
 pnpm git:log             # View commit history
 
@@ -445,15 +445,30 @@ docs: add API documentation for user endpoints
 
 ### AI-Powered Commits
 
-The project includes an AI commit message generator:
+The project includes an AI commit message generator using Claude Code CLI (with Ollama fallback):
 
 ```bash
 # Stage your changes
 git add .
 
-# Generate commit message with AI
+# Generate commit message with Claude Code (interactive mode)
 pnpm git:ai-commit
+
+# Auto-commit without confirmation
+pnpm git:ai-commit --commit
+
+# Force Ollama usage (bypass Claude)
+./scripts/ai-commit-message.sh --ollama
+
+# Use different Ollama model
+OLLAMA_MODEL=llama3.2:3b pnpm git:ai-commit
 ```
+
+**Setup Requirements:**
+- **Primary**: Claude Code must be running (the `claude` command)
+- **Fallback**: Ollama with llama3:instruct model
+
+The script uses your existing Claude Code session - no API key required!
 
 ### Git Hooks Integration
 
