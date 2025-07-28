@@ -9,15 +9,27 @@ datasource db {
   relationMode = "foreignKeys"
 }
 
-model User {
+// Event Store tables
+model EventStore {
   id            String   @id @default(cuid())
-  email         String   @unique
-  emailVerified Boolean  @default(false)
-  name          String?
-  image         String?
-  age           Int?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  aggregateId   String   @map("aggregate_id")
+  aggregateType String   @map("aggregate_type")
+  eventType     String   @map("event_type")
+  eventData     Json     @map("event_data")
+  eventVersion  Int      @map("event_version")
+  timestamp     DateTime @default(now())
 
-  @@map("user")
+  @@unique([aggregateId, eventVersion])
+  @@map("event_store")
+}
+
+model AggregateSnapshot {
+  id            String   @id @default(cuid())
+  aggregateId   String   @unique @map("aggregate_id")
+  aggregateType String   @map("aggregate_type")
+  data          Json
+  version       Int
+  timestamp     DateTime @default(now())
+
+  @@map("aggregate_snapshots")
 }
