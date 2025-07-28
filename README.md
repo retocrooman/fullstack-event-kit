@@ -61,12 +61,6 @@ src/modules/[feature]/
 
 ### Current Implementation
 
-#### User Management Module
-- Complete CRUD operations with Auth0 integration
-- Domain entities with email and profile management
-- Prisma-based repository implementation
-- RESTful API with validation
-
 #### Account & Coin Management Module
 - **CQRS Implementation**: Simplified commands and queries with integrated Zod validation
 - **Event Sourcing**: Complete audit trail with events (AccountCreated, CoinsAdded, etc.)
@@ -121,20 +115,15 @@ pnpm web lint          # Lint web code
 - **Event Store (MongoDB)**: localhost:27017
 - **Message Bus (NATS)**: localhost:4222 (client), localhost:8222 (monitoring)
 
-## API Documentation
-
-### User Endpoints
-- `GET /users` - List all users with pagination
-- `GET /users/:id` - Get user by ID
-- `POST /users` - Create new user
-- `PUT /users/:id` - Update user
+## API Endpoints
 
 ### Account Endpoints
 - `GET /accounts` - List accounts with pagination and filtering
+- `GET /accounts/me` - Get current user's account
 - `GET /accounts/:id` - Get account by ID
-- `POST /accounts` - Create new account
+- `GET /accounts/:id/exists` - Check if account exists
 - `PUT /accounts/:id` - Update account coins
-- `POST /accounts/:id/transfer` - Transfer coins between accounts
+- `POST /accounts/transfer` - Transfer coins between accounts
 - `GET /accounts/search?q=term` - Search accounts
 - `GET /accounts/stats` - Get account statistics
 - `DELETE /accounts/:id` - Delete account
@@ -149,19 +138,21 @@ All endpoints include request/response validation and consistent error handling.
 
 ## Architecture Benefits
 
-- **Domain-Driven Design**: Clear business logic separation with proper domain modeling
+- **Domain-Driven Design**: Clean business logic separation with proper domain modeling
 - **CQRS & Event Sourcing**: Scalable read/write separation with complete audit trail
-- **Streamlined CQRS**: Simplified command/query classes with integrated Zod validation
+- **Streamlined CQRS**: Simplified implementation with integrated Zod validation
 - **Modular Architecture**: Easy to test, maintain, and extend with clear boundaries
 - **Type Safety**: Full TypeScript coverage with strict mode and shared schemas
+- **No Documentation Overhead**: Clean API design without automated documentation burden
 
-## Contributing
+## Development Guidelines
 
-1. Follow DDD principles and maintain clear layer separation
-2. Use proper value objects for domain validation
-3. Implement comprehensive tests for all use cases
-4. Follow consistent API design patterns
-5. Follow TypeScript strict mode conventions
+1. **Follow DDD principles** and maintain clear layer separation
+2. **Use proper value objects** for domain validation
+3. **Implement comprehensive tests** for all use cases
+4. **Follow consistent API design** patterns without documentation overhead
+5. **Use TypeScript strict mode** conventions
+6. **Update README.md** when adding new features or changing architecture
 
 ## License
 

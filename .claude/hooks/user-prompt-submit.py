@@ -42,6 +42,14 @@ def check_prompt_against_rules(prompt):
             "message": "NEVER proactively create documentation files. Only create if explicitly requested."
         })
     
+    # Check for README update reminders
+    if re.search(r'(add|create|update|modify|change|refactor|fix).*(feature|module|endpoint|api)', prompt, re.IGNORECASE):
+        if not re.search(r'readme', prompt, re.IGNORECASE):
+            violations.append({
+                "rule": "README Update Reminder",
+                "message": "Consider updating README.md when adding new features or changing architecture"
+            })
+    
     return violations
 
 def main():
@@ -71,6 +79,7 @@ def main():
 3. Run build: pnpm api build
 4. Use EnvConfig for environment variables
 5. Edit existing files instead of creating new ones
+6. Update README.md when adding features or changing architecture
 
 Continue with your request, but ensure compliance with these rules.
 """
