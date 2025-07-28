@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "user-prompt-submit": ".claude/hooks/user-prompt-submit.py"
+  },
+  "project": {
+    "name": "fullstack-event-kit",
+    "description": "Fullstack TypeScript monorepo with DDD, CQRS, Event Sourcing, and Auth0",
+    "enforceRules": true
+  },
+  "rules": {
+    "mandatoryTesting": true,
+    "enforceLinting": true,
+    "requireBuild": true,
+    "useEnvConfig": true,
+    "preventFileCreation": true,
+    "preventDocumentationCreation": true
+  }
+}

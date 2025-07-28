@@ -126,4 +126,22 @@ Follow conventional commits: `<type>: <description>`
 
 ---
 
+## Claude Code Hooks
+
+This project includes a **user-prompt-submit hook** that automatically enforces CLAUDE.md rules:
+
+### Active Enforcement
+- **Mandatory Testing**: Warns when code changes don't mention testing
+- **EnvConfig Usage**: Prevents direct `process.env` usage
+- **File Creation Policy**: Discourages unnecessary file creation
+- **Documentation Policy**: Prevents proactive documentation creation
+
+### Hook Location
+- **Script**: `.claude/hooks/user-prompt-submit.py`
+- **Config**: `.claude/settings.json`
+
+The hook provides real-time warnings and reminders to maintain code quality and project standards.
+
+---
+
 **Remember**: Check [README.md](README.md) for setup instructions, technology details, and project overview.
