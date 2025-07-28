@@ -1,0 +1,241 @@
+import { ConflictException } from '@nestjs/common';
+import { BaseAggregate } from '../../../cqrs/base/base.aggregate';
+import { AccountDeletedError } from '../errors/account-deleted.error';
+import { InsufficientCoinsError } from '../errors/insufficient-coins.error';
+import { InvalidAmountError } from '../errors/invalid-amount.error';
+import { InvalidTransferError } from '../errors/invalid-transfer.error';
+
+export interface AccountState {
+  id: string;
+  coins: number;
+  isDeleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export class AccountAggregate extends BaseAggregate {
+  constructor(options: any) {
+    super(options);
+  }
+
+  get accountState(): AccountState | null {
+    return this.state as AccountState | null;
+  }
+
+  get isDeleted(): boolean {
+    return this.accountState?.isDeleted || false;
+  }
+
+  get coins(): number {
+    return this.accountState?.coins || 0;
+  }
+
+  // Command Handlers
+  CreateAccount(payload: { accountId: string; initialCoins?: number }) {
+    if (this.accountState) {
+      throw new ConflictException(`Account ${payload.accountId} already exists`);
+    }
+
+    this.emit('AccountCreated', {
+      accountId: payload.accountId,
+      initialCoins: payload.initialCoins || 0,
+      timestamp: new Date(),
+    });
+  }
+
+  AddCoins(payload: { accountId: string; amount: number }) {
+    // Auto-create account if it doesn't exist
+    if (!this.accountState) {
+      this.emit('AccountCreated', {
+        accountId: payload.accountId,
+        initialCoins: 0,
+        timestamp: new Date(),
+      });
+    }
+
+    this._ensureAccountNotDeleted();
+
+    if (payload.amount <= 0) {
+      throw new InvalidAmountError(payload.amount, 'must be positive');
+    }
+
+    const previousBalance = this.coins;
+    this.emit('CoinsAdded', {
+      accountId: payload.accountId,
+      amount: payload.amount,
+      previousBalance,
+      newBalance: previousBalance + payload.amount,
+      timestamp: new Date(),
+    });
+  }
+
+  DeductCoins(payload: { accountId: string; amount: number }) {
+    // Auto-create account if it doesn't exist
+    if (!this.accountState) {
+      this.emit('AccountCreated', {
+        accountId: payload.accountId,
+        initialCoins: 100, // Default initial coins
+        timestamp: new Date(),
+      });
+    }
+
+    this._ensureAccountNotDeleted();
+
+    if (payload.amount <= 0) {
+      throw new InvalidAmountError(payload.amount, 'must be positive');
+    }
+
+    const previousBalance = this.coins;
+    if (previousBalance < payload.amount) {
+      throw new InsufficientCoinsError(previousBalance, payload.amount);
+    }
+
+    this.emit('CoinsDeducted', {
+      accountId: payload.accountId,
+      amount: payload.amount,
+      previousBalance,
+      newBalance: previousBalance - payload.amount,
+      timestamp: new Date(),
+    });
+  }
+
+  SetCoins(payload: { accountId: string; coins: number }) {
+    // Auto-create account if it doesn't exist
+    if (!this.accountState) {
+      this.emit('AccountCreated', {
+        accountId: payload.accountId,
+        initialCoins: 0,
+        timestamp: new Date(),
+      });
+    }
+
+    this._ensureAccountNotDeleted();
+
+    if (payload.coins < 0) {
+      throw new InvalidAmountError(payload.coins, 'cannot be negative');
+    }
+
+    const previousBalance = this.coins;
+    if (previousBalance === payload.coins) {
+      return; // No change needed
+    }
+
+    this.emit('CoinsSet', {
+      accountId: payload.accountId,
+      previousBalance,
+      newBalance: payload.coins,
+      timestamp: new Date(),
+    });
+  }
+
+  TransferCoins(payload: { fromAccountId: string; toAccountId: string; amount: number }) {
+    // For transfers, account must exist - cannot transfer from non-existent account
+    if (!this.accountState || this.accountState.id !== payload.fromAccountId) {
+      throw new Error(`Account ${payload.fromAccountId} does not exist`);
+    }
+
+    this._ensureAccountNotDeleted();
+
+    if (payload.amount <= 0) {
+      throw new InvalidTransferError('amount must be positive');
+    }
+
+    const currentBalance = this.coins;
+    if (currentBalance < payload.amount) {
+      throw new InsufficientCoinsError(currentBalance, payload.amount);
+    }
+
+    this.emit('CoinsTransferred', {
+      fromAccountId: payload.fromAccountId,
+      toAccountId: payload.toAccountId,
+      amount: payload.amount,
+      timestamp: new Date(),
+    });
+  }
+
+  DeleteAccount(payload: { accountId: string }) {
+    // Cannot delete non-existent account
+    if (!this.accountState || this.accountState.id !== payload.accountId) {
+      throw new Error(`Account ${payload.accountId} does not exist`);
+    }
+
+    this._ensureAccountNotDeleted();
+
+    const finalBalance = this.coins;
+    this.emit('AccountDeleted', {
+      accountId: payload.accountId,
+      finalBalance,
+      timestamp: new Date(),
+    });
+  }
+
+  // Event Handlers (State Mutations)
+  AccountCreated(event: any) {
+    this.state = {
+      id: event.accountId,
+      coins: event.initialCoins || 0,
+      isDeleted: false,
+      createdAt: event.timestamp,
+      updatedAt: event.timestamp,
+    };
+  }
+
+  CoinsAdded(event: any) {
+    if (!this.state) return;
+
+    this.state = {
+      ...this.state,
+      coins: event.newBalance,
+      updatedAt: event.timestamp,
+    };
+  }
+
+  CoinsDeducted(event: any) {
+    if (!this.state) return;
+
+    this.state = {
+      ...this.state,
+      coins: event.newBalance,
+      updatedAt: event.timestamp,
+    };
+  }
+
+  CoinsSet(event: any) {
+    if (!this.state) return;
+
+    this.state = {
+      ...this.state,
+      coins: event.newBalance,
+      updatedAt: event.timestamp,
+    };
+  }
+
+  CoinsTransferred(event: any) {
+    if (!this.state) return;
+
+    // Only update the FROM account state in this aggregate
+    if (this.state.id === event.fromAccountId) {
+      this.state = {
+        ...this.state,
+        coins: this.state.coins - event.amount,
+        updatedAt: event.timestamp,
+      };
+    }
+  }
+
+  AccountDeleted(event: any) {
+    if (!this.state) return;
+
+    this.state = {
+      ...this.state,
+      isDeleted: true,
+      updatedAt: event.timestamp,
+    };
+  }
+
+  private _ensureAccountNotDeleted() {
+    if (this.isDeleted) {
+      throw new AccountDeletedError();
+    }
+  }
+}
