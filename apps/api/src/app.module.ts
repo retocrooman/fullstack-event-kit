@@ -7,14 +7,14 @@ import { HealthController } from './health.controller';
 import { AccountModule } from './modules/account/account.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AuthGuard } from './modules/auth/guards/auth.guard';
-import { EventSourcingModule } from './modules/event-sourcing/event-sourcing.module';
+import { AppCqrsModule } from './modules/cqrs/cqrs.module';
 import { PrismaService } from './prisma.service';
 import { GlobalExceptionFilter, MongoDBHealthIndicator } from './shared';
 
 @Module({
   imports: [
     TerminusModule,
-    EventSourcingModule,
+    AppCqrsModule,
     AuthModule,
     AccountModule,
   ],

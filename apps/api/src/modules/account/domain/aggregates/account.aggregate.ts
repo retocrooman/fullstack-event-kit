@@ -1,5 +1,5 @@
 import { ConflictException } from '@nestjs/common';
-import { BaseAggregate, DomainEvent } from '../../../event-sourcing/base/base.aggregate';
+import { BaseAggregate, DomainEvent } from '../../../cqrs/base/base.aggregate';
 import { AccountDeletedError } from '../errors/account-deleted.error';
 import { InsufficientCoinsError } from '../errors/insufficient-coins.error';
 import { InvalidAmountError } from '../errors/invalid-amount.error';

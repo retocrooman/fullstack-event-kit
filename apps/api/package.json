@@ -30,6 +30,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.2.0",
     "@nestjs/terminus": "^11.0.0",
+    "@nestjs/cqrs": "^11.0.3",
     "@node-rs/argon2": "^2.0.2",
     "@prisma/client": "^6.11.1",
     "@repo/shared-schemas": "workspace:^",

@@ -68,10 +68,11 @@ src/modules/[feature]/
 - RESTful API with validation and Swagger docs
 
 #### Account & Coin Management Module
-- **CQRS Implementation**: Commands (CreateAccount, AddCoins, DeductCoins, TransferCoins)
+- **CQRS Implementation**: Simplified commands and queries with integrated Zod validation
 - **Event Sourcing**: Complete audit trail with events (AccountCreated, CoinsAdded, etc.)
 - **Projections**: Real-time read model updates
 - **Advanced API**: Search, pagination, statistics, and transfer operations
+- **Streamlined Architecture**: Direct command/query classes without redundant DTOs
 
 #### Authentication & Security
 - Auth0 enterprise-grade authentication
@@ -150,6 +151,7 @@ All endpoints include OpenAPI/Swagger documentation, request/response validation
 
 - **Domain-Driven Design**: Clear business logic separation with proper domain modeling
 - **CQRS & Event Sourcing**: Scalable read/write separation with complete audit trail
+- **Streamlined CQRS**: Simplified command/query classes with integrated Zod validation
 - **Modular Architecture**: Easy to test, maintain, and extend with clear boundaries
 - **Type Safety**: Full TypeScript coverage with strict mode and shared schemas
 

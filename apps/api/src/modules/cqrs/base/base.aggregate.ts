@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { AggregateRoot } from '@nestjs/cqrs';
 
 export interface DomainEvent {
   readonly aggregateId: string;
@@ -8,10 +8,9 @@ export interface DomainEvent {
   readonly timestamp: Date;
 }
 
-export abstract class BaseAggregate extends EventEmitter {
+export abstract class BaseAggregate extends AggregateRoot {
   protected readonly aggregateId: string;
   private version: number = 0;
-  private uncommittedEvents: DomainEvent[] = [];
 
   constructor(aggregateId: string) {
     super();
@@ -29,14 +28,6 @@ export abstract class BaseAggregate extends EventEmitter {
     return this.version;
   }
 
-  getUncommittedEvents(): readonly DomainEvent[] {
-    return [...this.uncommittedEvents];
-  }
-
-  markEventsAsCommitted(): void {
-    this.uncommittedEvents = [];
-  }
-
   loadFromHistory(events: DomainEvent[]): void {
     events.forEach(event => {
       // Validate event belongs to this aggregate
@@ -49,6 +40,22 @@ export abstract class BaseAggregate extends EventEmitter {
       this.applyEvent(event, false);
       this.version = Math.max(this.version, event.version);
     });
+  }
+
+  getDomainEvents(): readonly DomainEvent[] {
+    // Convert NestJS CQRS events to our DomainEvent interface
+    return super.getUncommittedEvents().map((event: any) => ({
+      aggregateId: this.aggregateId,
+      eventType: event.constructor.name,
+      payload: event,
+      version: this.version,
+      timestamp: new Date(),
+    }));
+  }
+
+  markEventsAsCommitted(): void {
+    // Clear the uncommitted events from the base AggregateRoot
+    this.commit();
   }
 
   protected emitEvent(eventType: string, payload: Record<string, unknown>): void {
@@ -69,12 +76,10 @@ export abstract class BaseAggregate extends EventEmitter {
     // Apply the event to update internal state
     this.applyEvent(event, true);
     
-    // Track as uncommitted
-    this.uncommittedEvents.push(event);
-    this.version = nextVersion;
+    // Track as uncommitted event for persistence
+    this.apply(event);
     
-    // Emit for any listeners
-    this.emit(eventType, event);
+    this.version = nextVersion;
   }
 
   protected abstract applyEvent(event: DomainEvent, isNew: boolean): void;

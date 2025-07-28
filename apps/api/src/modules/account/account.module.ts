@@ -1,21 +1,52 @@
 import { Module } from '@nestjs/common';
-import { EventSourcingModule } from '../event-sourcing/event-sourcing.module';
-import { AccountCommandService } from './application/commands/account-command.service';
-import { AccountQueryService } from './application/queries/account-query.service';
-import { AccountController } from './presentation/controllers/account.controller';
+import { AppCqrsModule } from '../cqrs/cqrs.module';
+// Command Handlers
+import { AddCoinsHandler } from './application/handlers/commands/add-coins.handler';
+import { CreateAccountHandler } from './application/handlers/commands/create-account.handler';
+import { DeductCoinsHandler } from './application/handlers/commands/deduct-coins.handler';
+import { DeleteAccountHandler } from './application/handlers/commands/delete-account.handler';
+import { SetCoinsHandler } from './application/handlers/commands/set-coins.handler';
+import { TransferCoinsHandler } from './application/handlers/commands/transfer-coins.handler';
+// Query Handlers
+import { DoesAccountExistHandler } from './application/handlers/queries/does-account-exist.handler';
+import { GetAccountCountHandler } from './application/handlers/queries/get-account-count.handler';
+import { GetAccountHandler } from './application/handlers/queries/get-account.handler';
+import { GetAccountsWithPaginationHandler } from './application/handlers/queries/get-accounts-with-pagination.handler';
+import { GetAllAccountsHandler } from './application/handlers/queries/get-all-accounts.handler';
+import { GetTopAccountsByCoinsHandler } from './application/handlers/queries/get-top-accounts-by-coins.handler';
+import { GetTotalCoinsHandler } from './application/handlers/queries/get-total-coins.handler';
+import { SearchAccountsByIdHandler } from './application/handlers/queries/search-accounts-by-id.handler';
+import { AccountCommandController } from './presentation/controllers/account-command.controller';
+import { AccountQueryController } from './presentation/controllers/account-query.controller';
+
+const CommandHandlers = [
+  CreateAccountHandler,
+  AddCoinsHandler,
+  DeductCoinsHandler,
+  SetCoinsHandler,
+  TransferCoinsHandler,
+  DeleteAccountHandler,
+];
+
+const QueryHandlers = [
+  GetAccountHandler,
+  GetAllAccountsHandler,
+  GetAccountsWithPaginationHandler,
+  SearchAccountsByIdHandler,
+  GetTopAccountsByCoinsHandler,
+  GetAccountCountHandler,
+  GetTotalCoinsHandler,
+  DoesAccountExistHandler,
+];
 
 @Module({
-  imports: [EventSourcingModule],
-  controllers: [AccountController],
+  imports: [AppCqrsModule],
+  controllers: [AccountQueryController, AccountCommandController],
   providers: [
-    // Event Sourcing Services
-    AccountCommandService,
-    AccountQueryService,
+    // Command and Query Handlers
+    ...CommandHandlers,
+    ...QueryHandlers,
   ],
-  exports: [
-    // Export Event Sourcing services for other modules if needed
-    AccountCommandService,
-    AccountQueryService,
-  ],
+  exports: [],
 })
 export class AccountModule {}

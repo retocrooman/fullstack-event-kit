@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HealthIndicator, HealthIndicatorResult, HealthCheckError } from '@nestjs/terminus';
-import { EventStoreService } from '../../modules/event-sourcing/services/event-store.service';
+import { EventStoreService } from '../../modules/cqrs/services/event-store.service';
 
 @Injectable()
 export class MongoDBHealthIndicator extends HealthIndicator {
