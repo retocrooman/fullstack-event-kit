@@ -22,7 +22,7 @@ This authentication system provides a modern, secure solution for user authentic
 - **Better Auth Integration**: Modern authentication library with built-in security
 - **Session Management**: Secure session handling with database persistence
 - **Password Security**: Argon2 hashing via Better Auth
-- **Input Validation**: Comprehensive request validation with class-validator
+- **Input Validation**: Type-safe request validation with shared Zod schemas
 - **CSRF Protection**: Built-in protection through Better Auth
 - **Rate Limiting**: Configurable through Better Auth settings
 
@@ -328,7 +328,7 @@ Better Auth handles session management automatically with the following features
 
 ### Input Validation
 
-- All inputs validated using class-validator
+- All inputs validated using shared Zod schemas
 - Email format validation
 - Password strength requirements
 - Request sanitization to prevent injection attacks

@@ -5,3 +5,10 @@ process.env.AUTH_SERVER_URL = "http://localhost:4000";
 process.env.PORT = "8080";
 process.env.NODE_ENV = "test";
 process.env.ALLOWED_ORIGINS = "http://localhost:3000";
+
+// Auth0 Test Configuration
+process.env.AUTH0_DOMAIN = "test-domain.auth0.com";
+process.env.AUTH0_AUDIENCE = "https://test-api";
+process.env.AUTH0_ISSUER_BASE_URL = "https://test-domain.auth0.com";
+process.env.AUTH0_CLIENT_ID = "test-client-id";
+process.env.AUTH0_CLIENT_SECRET = "test-client-secret";

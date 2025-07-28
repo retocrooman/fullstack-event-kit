@@ -55,7 +55,7 @@ This project extends the [monorepo-ts-template](https://github.com/retocrooman/m
 
 - **Repository Pattern** - Abstracted data access layer
 - **Dependency Injection** - NestJS IoC container
-- **DTO Validation** - Input validation with class-validator
+- **Type Safety** - Shared Zod schemas for validation and type definitions
 - **Entity Mapping** - Clean separation between domain and API models
 
 ### Planned Features

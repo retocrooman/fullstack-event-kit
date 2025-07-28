@@ -43,7 +43,7 @@ pnpm kill-port 3000      # Kill process on specific port (if needed)
 
 - **Module Structure**: `feature/dto/`, `feature/entities/`, `feature/services/`
 - **Dependency Injection**: Always use constructor injection
-- **DTOs**: Use class-validator decorators for validation
+- **DTOs**: Use shared Zod schemas for type safety
 - **API Documentation**: Add Swagger decorators to all endpoints
 
 ## Testing Requirements

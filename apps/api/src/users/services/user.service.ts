@@ -1,6 +1,10 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { 
+  type CreateUserInput, 
+  type UpdateUserInput, 
+  type UserResponse 
+} from '@repo/shared-schemas';
 import { DuplicateResourceException, ResourceNotFoundException } from '../../shared/exceptions/business-exception';
-import { CreateUserDto, UserResponseDto } from '../dto/user.dto';
 import { UserEntity, UpdateUserData } from '../entities/user.entity';
 import { IUserRepository } from '../interfaces/user-repository.interface';
 import { UserMapper } from '../mappers/user.mapper';
@@ -9,7 +13,7 @@ import { UserMapper } from '../mappers/user.mapper';
 export class UserService {
   constructor(@Inject(IUserRepository) private readonly userRepository: IUserRepository) {}
 
-  async createUserFromAuth0(authUserId: string, createUserDto: CreateUserDto): Promise<UserResponseDto> {
+  async createUserFromAuth0(authUserId: string, createUserData: CreateUserInput): Promise<UserResponse> {
     // Check if user already exists with this Auth0 ID
     const existingUser = await this.userRepository.findById(authUserId);
     if (existingUser) {
@@ -17,24 +21,24 @@ export class UserService {
     }
 
     // Check if email is already in use
-    const userWithEmail = await this.userRepository.findByEmail(createUserDto.email);
+    const userWithEmail = await this.userRepository.findByEmail(createUserData.email);
     if (userWithEmail) {
-      throw new DuplicateResourceException('User', 'email', createUserDto.email);
+      throw new DuplicateResourceException('User', 'email', createUserData.email);
     }
 
     // Create new user with Auth0 ID
-    const createUserData = {
+    const userEntityData = {
       id: authUserId, // Use Auth0 sub as the user ID
-      email: createUserDto.email,
-      name: createUserDto.name,
-      age: createUserDto.age,
+      email: createUserData.email,
+      name: createUserData.name,
+      age: createUserData.age,
     };
 
-    const createdUser = await this.userRepository.create(createUserData);
+    const createdUser = await this.userRepository.create(userEntityData);
     return UserMapper.toResponseDto(createdUser);
   }
 
-  async getUserById(id: string): Promise<UserResponseDto> {
+  async getUserById(id: string): Promise<UserResponse> {
     const user = await this.userRepository.findById(id);
     if (!user) {
       throw new ResourceNotFoundException('User', id);
@@ -42,12 +46,12 @@ export class UserService {
     return UserMapper.toResponseDto(user);
   }
 
-  async getAllUsers(): Promise<UserResponseDto[]> {
+  async getAllUsers(): Promise<UserResponse[]> {
     const users = await this.userRepository.findAll();
     return UserMapper.toResponseDtoArray(users);
   }
 
-  async updateUser(id: string, updateData: Partial<CreateUserDto>): Promise<UserResponseDto> {
+  async updateUser(id: string, updateData: UpdateUserInput): Promise<UserResponse> {
     // Check if user exists
     const existingUser = await this.userRepository.findById(id);
     if (!existingUser) {
