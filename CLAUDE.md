@@ -458,6 +458,12 @@ OLLAMA_MODEL=llama3.2:3b pnpm git:ai-commit
 
 The script uses your existing Claude Code session - no API key required!
 
+**Best Practices for Commit Messages:**
+1. **Check commit history**: Always run `git log --oneline -10` to see recent commit patterns
+2. **Follow project style**: Match the tone, format, and structure of existing commits
+3. **Use consistent prefixes**: Follow the project's convention (`feat:`, `fix:`, `refactor:`, etc.)
+4. **Keep it concise**: Follow the established length and detail level of commit messages
+
 ### Git Hooks Integration
 
 The project uses git hooks for automated quality checks instead of GitHub Actions:
