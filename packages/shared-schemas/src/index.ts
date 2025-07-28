@@ -1,5 +1,5 @@
 // Re-export all schemas
-export * from './user';
+export * from './account';
 
 // Common utilities
 export { z } from 'zod';

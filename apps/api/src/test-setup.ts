@@ -12,3 +12,4 @@ process.env.AUTH0_AUDIENCE = "https://test-api";
 process.env.AUTH0_ISSUER_BASE_URL = "https://test-domain.auth0.com";
 process.env.AUTH0_CLIENT_ID = "test-client-id";
 process.env.AUTH0_CLIENT_SECRET = "test-client-secret";
+process.env.AUTH0_SECRET = "test-auth0-secret";

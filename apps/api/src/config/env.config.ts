@@ -10,6 +10,7 @@ export interface ApiConfig {
   auth0Domain: string;
   auth0Audience: string;
   auth0IssuerBaseUrl: string;
+  auth0Secret: string;
 }
 
 @Injectable()
@@ -46,6 +47,7 @@ export class EnvConfig {
       auth0Domain: required('AUTH0_DOMAIN'),
       auth0Audience: required('AUTH0_AUDIENCE'),
       auth0IssuerBaseUrl: required('AUTH0_ISSUER_BASE_URL'),
+      auth0Secret: optional('AUTH0_SECRET', 'your-auth0-secret'),
     };
   }
 
@@ -84,6 +86,10 @@ export class EnvConfig {
 
   static get auth0IssuerBaseUrl(): string {
     return this.config.auth0IssuerBaseUrl;
+  }
+
+  static get auth0Secret(): string {
+    return this.config.auth0Secret;
   }
 
   static get auth0JwksUri(): string {

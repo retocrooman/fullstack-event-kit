@@ -1,6 +1,7 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { Request, Response } from 'express';
+import { EnvConfig } from '../../config/env.config';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -97,7 +98,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       error,
       message,
       ...(details && { details }),
-      ...(process.env.NODE_ENV === 'development' && {
+      ...(EnvConfig.isDevelopment && {
         stack: exception instanceof Error ? exception.stack : undefined,
       }),
     });
