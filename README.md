@@ -65,7 +65,7 @@ src/modules/[feature]/
 - Complete CRUD operations with Auth0 integration
 - Domain entities with email and profile management
 - Prisma-based repository implementation
-- RESTful API with validation and Swagger docs
+- RESTful API with validation
 
 #### Account & Coin Management Module
 - **CQRS Implementation**: Simplified commands and queries with integrated Zod validation
@@ -145,7 +145,7 @@ pnpm web lint          # Lint web code
 - `GET /health-check/eventstore` - MongoDB eventstore health
 - `GET /health-check/all` - All services health status
 
-All endpoints include OpenAPI/Swagger documentation, request/response validation, and consistent error handling.
+All endpoints include request/response validation and consistent error handling.
 
 ## Architecture Benefits
 
@@ -160,7 +160,7 @@ All endpoints include OpenAPI/Swagger documentation, request/response validation
 1. Follow DDD principles and maintain clear layer separation
 2. Use proper value objects for domain validation
 3. Implement comprehensive tests for all use cases
-4. Maintain consistent API documentation
+4. Follow consistent API design patterns
 5. Follow TypeScript strict mode conventions
 
 ## License

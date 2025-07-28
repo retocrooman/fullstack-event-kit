@@ -1,6 +1,5 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { EnvConfig } from './config/env.config';
 import { GlobalExceptionFilter } from './shared/filters/global-exception.filter';
@@ -36,17 +35,6 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger configuration
-  const config = new DocumentBuilder()
-    .setTitle('API Documentation')
-    .setDescription('The API description')
-    .setVersion('1.0')
-    .addTag('api')
-    .addBearerAuth()
-    .build();
-
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document);
 
   await app.listen(EnvConfig.port);
   console.log(`API Server is running on: http://localhost:${EnvConfig.port}`);
