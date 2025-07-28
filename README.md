@@ -1,304 +1,156 @@
 # Fullstack Event Kit
 
-A comprehensive fullstack TypeScript monorepo template enhanced with modern event-driven architecture, authentication, and data visualization capabilities.
+A fullstack TypeScript monorepo template built with **Domain-Driven Design (DDD)**, **CQRS**, **Event Sourcing**, and Auth0 authentication.
 
-## Overview
+## Features
 
-This project extends the [monorepo-ts-template](https://github.com/retocrooman/monorepo-ts-template) with three key enhancements:
+- **Domain-Driven Design** - Clean separation with proper domain modeling
+- **CQRS & Event Sourcing** - Command Query Responsibility Segregation with node-cqrs
+- **Modular Architecture** - Feature-based modules with clear layer separation
+- **Auth0 Authentication** - Enterprise-grade user management
+- **Data Visualization** - Tremor components for dashboards
 
-- **Event-Driven Architecture** with CQRS patterns and NATS messaging for scalable microservices
-- **Modern Authentication** with Auth0 for enterprise-grade user management and security
-- **Data Visualization** with Tremor for building beautiful, responsive dashboards and analytics
+## Architecture
 
-## Enhanced Technology Stack
+### Project Structure
 
-### Current Architecture
+```
+apps/
+├── api/                    # NestJS backend (port 8080)
+│   └── src/modules/        # Feature modules (DDD)
+└── web/                    # Next.js frontend (port 3000)
+packages/                   # Shared packages
+```
 
-- **API Server (Port 8080)** - NestJS backend with Auth0 JWT validation and user management
-- **Web App (Port 3000)** - Next.js frontend with Auth0 authentication and Tremor components
-- **NATS Server (Port 4222)** - Message broker for event-driven communication
-- **Database (PostgreSQL)** - Primary data store with Prisma ORM
+### Module Structure
 
-### Backend Technologies
+```
+src/modules/[feature]/
+├── domain/                 # Entities, value objects, events
+├── application/            # Use cases, CQRS (aggregates, projections)
+├── infrastructure/         # Repositories, external providers
+├── presentation/           # Controllers, DTOs, mappers
+└── [feature].module.ts
+```
 
-- **NestJS 11.x** - Scalable Node.js framework
-- **PostgreSQL + Prisma** - Type-safe database operations
-- **Auth0** - Enterprise authentication and authorization
-- **NATS** - High-performance messaging system with JetStream persistence
-- **Event Sourcing** - Transactional outbox pattern for reliable event publishing
-- **Global Exception Handling** - Centralized error management
-- **Repository Pattern** - Clean data access layer
+## Technology Stack
 
-### Frontend Technologies
+### Backend
+- **Framework**: NestJS 11.x with TypeScript 5.x
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: Auth0 integration with JWT validation
+- **CQRS & Event Sourcing**: node-cqrs library
+- **Testing**: Jest with comprehensive test coverage
 
-- **Next.js 15.x** - React framework with App Router
-- **Auth0 Next.js SDK** - Client-side authentication with protected routes
-- **Radix UI** - Unstyled, accessible UI components
-- **Tremor** - Beautiful, responsive data visualization components
-- **Tailwind CSS v4** - Utility-first CSS framework
-- **React Query** - Server state management
+### Frontend
+- **Framework**: Next.js 15.x with App Router
+- **UI**: React 19.x with Radix UI components
+- **Styling**: Tailwind CSS v4
+- **Data Visualization**: Tremor components
+- **Authentication**: Auth0 Next.js SDK integration
+
+### Infrastructure
+- **Package Manager**: pnpm 10.3.0
+- **Build System**: Turborepo
+- **Containerization**: Docker & Docker Compose
+- **Database**: PostgreSQL (containerized)
 
 ## Key Features
 
 ### Current Implementation
 
-- **Auth0 Authentication** - Enterprise-grade user authentication and authorization
-- **User Management** - Complete CRUD operations with Auth0 integration
-- **Event-Driven Architecture** - CQRS with transactional outbox pattern
-- **NATS Messaging** - Reliable event publishing and consumption
-- **Global Exception Handling** - Consistent error responses
-- **Repository Pattern** - Clean separation of data access
-- **Health Checks** - Application and database health monitoring
-- **Type Safety** - Full TypeScript coverage with strict mode
+#### User Management Module
+- Complete CRUD operations with Auth0 integration
+- Domain entities with email and profile management
+- Prisma-based repository implementation
+- RESTful API with validation and Swagger docs
 
-### Architecture Patterns
+#### Account & Coin Management Module
+- **CQRS Implementation**: Commands (CreateAccount, AddCoins, DeductCoins, TransferCoins)
+- **Event Sourcing**: Complete audit trail with events (AccountCreated, CoinsAdded, etc.)
+- **Projections**: Real-time read model updates
+- **Advanced API**: Search, pagination, statistics, and transfer operations
 
-- **Repository Pattern** - Abstracted data access layer
-- **Dependency Injection** - NestJS IoC container
-- **Type Safety** - Shared Zod schemas for validation and type definitions
-- **Entity Mapping** - Clean separation between domain and API models
-
-### Planned Features
-
-- **Data Visualization** - Interactive dashboards with Tremor
-- **Advanced Event Sourcing** - Extended event replay and projection capabilities
-- **Multi-tenant Architecture** - Support for multiple organizations
+#### Authentication & Security
+- Auth0 enterprise-grade authentication
+- JWT token validation with global exception handling
+- Role-based access control ready
 
 ## Quick Start
 
-### Auth0 Setup (Required)
-
-1. **Create Auth0 Application**
-   - Go to [Auth0 Dashboard](https://manage.auth0.com/)
-   - Create a new "Single Page Application"
-   - Note your Domain, Client ID, and Client Secret
-
-2. **Configure Auth0 Application**
-   - Set Allowed Callback URLs: `http://localhost:3000/api/auth/callback`
-   - Set Allowed Logout URLs: `http://localhost:3000`
-   - Set Allowed Web Origins: `http://localhost:3000`
-
-3. **Create Auth0 API**
-   - Create a new API in Auth0 Dashboard
-   - Set Identifier (Audience): `https://your-api-identifier`
-   - Note the API Identifier for configuration
-
-## Project Setup
-
-### Prerequisites
-
-- Node.js 23.6.0+
-- pnpm 10.3.0+
-- Docker & Docker Compose
-
-### Environment Configuration
-
-1. **Copy environment template**
-   ```bash
-   cp .env.example .env.local
-   ```
-
-2. **Configure Auth0 variables in .env.local**
-   ```env
-   AUTH0_SECRET=your-long-random-secret-key-for-session-encryption-minimum-32-characters
-   AUTH0_BASE_URL=http://localhost:3000
-   AUTH0_ISSUER_BASE_URL=https://your-tenant.auth0.com
-   AUTH0_CLIENT_ID=your-client-id
-   AUTH0_CLIENT_SECRET=your-client-secret
-   AUTH0_AUDIENCE=https://your-api-identifier
-   ```
-
-### Complete Setup
-
 ```bash
-# Run complete project setup
-pnpm setup
-
-# This will:
-# 1. Install all dependencies
-# 2. Build all packages
-# 3. Start PostgreSQL and NATS containers
-# 4. Push database schema
-# 5. Configure git hooks
+pnpm setup              # Complete project setup
+pnpm api start:dev      # API server (http://localhost:8080)
+pnpm web dev           # Web app (http://localhost:3000)
 ```
 
-### Development
-
-```bash
-# Start API server (port 8080)
-pnpm api start:dev
-
-# Start web application (port 3000)
-pnpm web dev
-
-# Verify servers are running
-curl http://localhost:8080/health-check
-curl http://localhost:3000
-```
-
-## API Endpoints
-
-### Health Checks
-
-- `GET /health-check` - Application health status
-- `GET /health-check/db` - Database connectivity status
-
-### Authentication (Auth0)
-
-- `GET /api/auth/login` - Initiate Auth0 login
-- `GET /api/auth/logout` - Auth0 logout
-- `GET /api/auth/callback` - Auth0 callback handler
-
-### User Management (Protected)
-
-- `GET /users` - Get all users (public for testing)
-- `GET /users/me` - Get current user profile (requires Auth0 token)
-- `PUT /users/me` - Update current user profile (requires Auth0 token)
-- `GET /users/:id` - Get user by ID (public for testing)
-- `PUT /users/:id` - Update user (public for testing)
-
-### Event System
-
-- **NATS Messaging** - Event publishing and consumption via NATS
-- **Outbox Pattern** - Reliable event delivery with transactional guarantees
-
-## Environment Configuration
-
-### Complete Environment Variables (.env.local)
-
-```env
-# Auth0 Configuration (Required)
-AUTH0_SECRET=your-long-random-secret-key-for-session-encryption-minimum-32-characters
-AUTH0_BASE_URL=http://localhost:3000
-AUTH0_ISSUER_BASE_URL=https://your-tenant.auth0.com
-AUTH0_CLIENT_ID=your-client-id
-AUTH0_CLIENT_SECRET=your-client-secret
-AUTH0_AUDIENCE=https://your-api-identifier
-AUTH0_SCOPE=openid profile email
-
-# Database Configuration
-DATABASE_URL=postgresql://user:password@localhost:5433/api_db?schema=public
-
-# API Server Configuration
-API_PORT=8080
-API_BASE_URL=http://localhost:8080
-ALLOWED_ORIGINS=http://localhost:3000
-
-# NATS Configuration
-NATS_HOST=localhost
-NATS_PORT=4222
-
-# Event Processing
-OUTBOX_PROCESSING_INTERVAL_MS=5000
-OUTBOX_CLEANUP_INTERVAL_MS=3600000
-OUTBOX_RETENTION_DAYS=7
-```
-
-## Testing
-
-### API Server Tests
-
-```bash
-# Run all tests
-pnpm api test
-
-# Run E2E tests
-pnpm api test:e2e
-
-# Run with coverage
-pnpm api test:cov
-
-# Watch mode
-pnpm api test:watch
-```
-
-### Manual Testing
-
-Use REST Client files for manual API testing:
-
-- `rest-client/health.http` - Health check endpoints
-- `rest-client/users.http` - User management endpoints
-- `rest-client/api.http` - General API testing
-
-### Test Database
-
-Tests use isolated database environment configured in `apps/api/src/test-setup.ts`.
-
-## Architecture Decisions
-
-### Why NestJS?
-
-- **Scalability** - Enterprise-grade framework with dependency injection
-- **TypeScript First** - Built with TypeScript for type safety
-- **Modular Architecture** - Clean separation of concerns
-- **Decorator Support** - Clean validation and documentation
-
-### Why Repository Pattern?
-
-- **Testability** - Easy mocking and unit testing
-- **Abstraction** - Clean separation between business logic and data access
-- **Flexibility** - Easy to switch database implementations
-- **Type Safety** - Strongly typed interfaces
-
-### Why Auth0?
-
-- **Enterprise Security** - Industry-leading authentication and authorization
-- **Zero Maintenance** - Fully managed service with automatic updates
-- **Scalable** - Handles millions of users without infrastructure concerns
-- **Rich Ecosystem** - Extensive integrations and advanced features
-- **Compliance Ready** - SOC2, GDPR, HIPAA compliant out of the box
-
-## Project Structure
-
-```
-fullstack-event-kit/
-├── apps/
-│   ├── api/                 # NestJS API server (port 8080)
-│   │   ├── src/
-│   │   │   ├── auth/       # Auth0 JWT validation
-│   │   │   ├── users/      # User management with Auth0 integration
-│   │   │   ├── infrastructure/ # Repository implementations
-│   │   │   ├── shared/     # Exception handling & filters
-│   │   │   └── config/     # Environment configuration
-│   │   ├── test/           # E2E tests
-│   │   └── prisma/         # Database schema
-│   ├── auth/               # Legacy auth service (to be removed)
-│   └── web/                # Next.js frontend (port 3000)
-│       └── src/
-│           ├── app/        # App Router with Auth0 protection
-│           ├── features/   # Feature-based organization
-│           └── lib/        # API client with Auth0 tokens
-├── rest-client/            # HTTP request files
-└── dockers/               # Docker configurations (PostgreSQL + NATS)
-```
-
-## Common Commands
+### Common Commands
 
 ```bash
 # Development
-pnpm setup                 # Complete project setup
-pnpm api start:dev         # Start API server
-pnpm web dev              # Start web application
+pnpm api start:dev      # Start API in watch mode
+pnpm web dev           # Start web app in dev mode
+
+# Building
+pnpm build             # Build all packages
+pnpm api build         # Build API only
+pnpm web build         # Build web only
 
 # Testing
-pnpm api test             # Run API tests
-pnpm api test:e2e         # E2E tests
-pnpm api test:cov         # Coverage report
+pnpm api test          # Run API tests
+pnpm api test:e2e      # Run E2E tests
+pnpm api test:cov      # Run tests with coverage
 
 # Database
-pnpm api db:generate      # Generate Prisma client
-pnpm api db:push          # Push schema changes
+pnpm api db:generate   # Generate Prisma client
+pnpm api db:push       # Push schema to database
 
-# Build & Quality
-pnpm build                # Build all packages
-pnpm api lint             # Lint API code
-pnpm api format           # Format code
+# Code Quality
+pnpm api lint          # Lint API code
+pnpm web lint          # Lint web code
 ```
 
-## Development Roadmap
+### Port Configuration
 
-See [TODO.md](TODO.md) for the complete development roadmap and implementation plan.
+- **API Server**: http://localhost:8080
+- **Web Application**: http://localhost:3000
+- **Database (PostgreSQL)**: localhost:5433
+
+## API Documentation
+
+### User Endpoints
+- `GET /users` - List all users with pagination
+- `GET /users/:id` - Get user by ID
+- `POST /users` - Create new user
+- `PUT /users/:id` - Update user
+
+### Account Endpoints
+- `GET /accounts` - List accounts with pagination and filtering
+- `GET /accounts/:id` - Get account by ID
+- `POST /accounts` - Create new account
+- `PUT /accounts/:id` - Update account coins
+- `POST /accounts/:id/transfer` - Transfer coins between accounts
+- `GET /accounts/search?q=term` - Search accounts
+- `GET /accounts/stats` - Get account statistics
+- `DELETE /accounts/:id` - Delete account
+
+All endpoints include OpenAPI/Swagger documentation, request/response validation, and consistent error handling.
+
+## Architecture Benefits
+
+- **Domain-Driven Design**: Clear business logic separation with proper domain modeling
+- **CQRS & Event Sourcing**: Scalable read/write separation with complete audit trail
+- **Modular Architecture**: Easy to test, maintain, and extend with clear boundaries
+- **Type Safety**: Full TypeScript coverage with strict mode and shared schemas
+
+## Contributing
+
+1. Follow DDD principles and maintain clear layer separation
+2. Use proper value objects for domain validation
+3. Implement comprehensive tests for all use cases
+4. Maintain consistent API documentation
+5. Follow TypeScript strict mode conventions
 
 ## License
 
-This project is licensed under the terms specified in the [LICENSE.md](LICENSE.md) file.
+MIT License
