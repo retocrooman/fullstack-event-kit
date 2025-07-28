@@ -9,6 +9,30 @@ import { UserMapper } from '../mappers/user.mapper';
 export class UserService {
   constructor(@Inject(IUserRepository) private readonly userRepository: IUserRepository) {}
 
+  async createUserFromAuth0(authUserId: string, createUserDto: CreateUserDto): Promise<UserResponseDto> {
+    // Check if user already exists with this Auth0 ID
+    const existingUser = await this.userRepository.findById(authUserId);
+    if (existingUser) {
+      return UserMapper.toResponseDto(existingUser);
+    }
+
+    // Check if email is already in use
+    const userWithEmail = await this.userRepository.findByEmail(createUserDto.email);
+    if (userWithEmail) {
+      throw new DuplicateResourceException('User', 'email', createUserDto.email);
+    }
+
+    // Create new user with Auth0 ID
+    const createUserData = {
+      id: authUserId, // Use Auth0 sub as the user ID
+      email: createUserDto.email,
+      name: createUserDto.name,
+      age: createUserDto.age,
+    };
+
+    const createdUser = await this.userRepository.create(createUserData);
+    return UserMapper.toResponseDto(createdUser);
+  }
 
   async getUserById(id: string): Promise<UserResponseDto> {
     const user = await this.userRepository.findById(id);

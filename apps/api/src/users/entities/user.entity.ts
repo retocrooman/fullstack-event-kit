@@ -11,6 +11,7 @@ export interface User {
 }
 
 export interface CreateUserData {
+  readonly id?: string;
   readonly name?: string;
   readonly email: string;
   readonly age?: number;
@@ -28,6 +29,18 @@ export interface UpdateUserData {
 
 // Pure functions for User operations
 export const UserEntity = {
+  // Factory function to create User from create data
+  create: (createData: CreateUserData): User => ({
+    id: createData.id || '', // Will be set by repository
+    name: createData.name || null,
+    email: createData.email,
+    age: createData.age || null,
+    emailVerified: createData.emailVerified || false,
+    image: createData.image || null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }),
+
   // Factory function to create User from Prisma data
   fromPrisma: (prismaUser: any): User => ({
     id: prismaUser.id,

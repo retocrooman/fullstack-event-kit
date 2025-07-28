@@ -18,8 +18,8 @@ This document provides comprehensive guidelines for Claude AI (or any AI assista
 
 The Fullstack Event Kit is a modern TypeScript monorepo template enhanced with:
 
-- **Event-Driven Architecture** using CQRS patterns
-- **Authentication** powered by better-auth
+- **Event-Driven Architecture** using CQRS patterns and NATS messaging
+- **Authentication** powered by Auth0 enterprise authentication
 - **Data Visualization** with Tremor components
 - **Infrastructure** using NestJS (API) and Next.js (Web)
 
@@ -32,7 +32,7 @@ fullstack-event-kit/
 ├── apps/
 │   ├── api/                 # NestJS backend application
 │   │   ├── src/
-│   │   │   ├── auth/       # Authentication module (better-auth)
+│   │   │   ├── auth/       # Auth0 JWT validation module
 │   │   │   ├── users/      # User management module
 │   │   │   ├── infrastructure/  # Repository implementations
 │   │   │   └── shared/     # Shared utilities and base classes
@@ -541,57 +541,60 @@ The project uses git hooks for automated quality checks instead of GitHub Action
 
 ## Project-Specific Considerations
 
-### Authentication Architecture (Microservices Pattern)
+### Authentication Architecture (Auth0 Integration)
 
-**Architecture Decision**: Separate auth server with JWT-based authentication (Lucia implementation)
+**Architecture Decision**: Auth0-based authentication with NestJS JWT validation
 
 #### Service Responsibilities
 
-**🔐 Auth Server** (`apps/auth` - Port 4000):
+**🔐 Auth0 Service** (External SaaS):
 - User registration and authentication
-- Password management (Argon2 hashing)
-- Session management (Lucia)
-- JWT token generation
-- Security-focused database with passwords
+- Password management and security
+- Social login providers (Google, GitHub, etc.)
+- JWT token generation with JWKS rotation
+- Compliance and security auditing
 
 **🏗️ API Server** (`apps/api` - Port 8080):
-- User profile management
+- Auth0 JWT token validation via JWKS
+- User profile management with Auth0 integration
 - Business logic and application features
-- JWT token validation
-- Protected resource access
-- Application-specific user data
+- Protected resource access with Auth0 claims
+- Dynamic user creation from Auth0 identity
 
 #### Authentication Flow
 
 ```
-1. User Registration:
-   POST http://localhost:4000/auth/register
-   { "email": "user@example.com", "password": "password", "name": "User Name" }
+1. User Login (Frontend):
+   GET http://localhost:3000/api/auth/login
+   → Redirects to Auth0 login page
    
-2. User Login:
-   POST http://localhost:4000/auth/login
-   { "email": "user@example.com", "password": "password" }
-   → Returns JWT token
+2. Auth0 Authentication:
+   User authenticates via Auth0 (email/password, social login)
+   → Auth0 generates JWT token
    
-3. API Access:
+3. Callback & Token Exchange:
+   GET http://localhost:3000/api/auth/callback
+   → Receives Auth0 JWT token
+   
+4. API Access with Auth0 Token:
    GET http://localhost:8080/users/me
-   Authorization: Bearer <jwt_token>
+   Authorization: Bearer <auth0_jwt_token>
 ```
 
 #### Implementation Details
-- **Auth Database**: Contains passwords, sessions, basic user info
-- **API Database**: Contains application-specific user data (age, preferences, etc.)
-- **Token Format**: RS256 JWT with user claims
-- **Session Management**: Lucia-based with automatic expiration
-- **Security**: Argon2 password hashing, secure session storage
+- **Auth0 Management**: Fully managed authentication service
+- **API Database**: Contains application-specific user data linked to Auth0 user ID
+- **Token Format**: RS256 JWT with Auth0 claims (sub, email, name, picture)
+- **Session Management**: Auth0 Next.js SDK with automatic token refresh
+- **Security**: Auth0 enterprise-grade security, JWKS key rotation
 
 #### Key Principles
-- ✅ Authentication responsibilities centralized in auth server
-- ✅ API server focuses on business logic
-- ✅ JWT tokens for stateless API authentication
-- ✅ Separate databases for security and application data
-- ❌ No user creation in API server
-- ❌ No password handling in API server
+- ✅ Authentication responsibilities delegated to Auth0
+- ✅ API server focuses on business logic with JWT validation
+- ✅ Auth0 JWT tokens for stateless API authentication
+- ✅ Dynamic user creation from Auth0 identity claims
+- ✅ Enterprise-grade security and compliance
+- ✅ Zero maintenance authentication infrastructure
 
 ### Event-Driven Architecture (NATS + Outbox Pattern)
 
@@ -738,6 +741,18 @@ Use `rest-client/error-testing.http` to test various error scenarios.
 - Keep dependencies updated
 - Use environment variables for secrets
 
+### Environment Variable Security
+
+**CRITICAL**: Never share or transmit environment variables outside the local development environment:
+
+- **NEVER** include `.env` files in git commits
+- **NEVER** share environment variables in chat messages, logs, or external communications
+- **NEVER** transmit Auth0 secrets, database passwords, or API keys to external services
+- **ALWAYS** use `.env.example` as template without actual values
+- **ALWAYS** store production secrets in secure credential management systems
+- If Claude AI needs to help with environment configuration, only share variable names (not values)
+- Use placeholder values in documentation and examples
+
 ### Future Enhancements
 
 Refer to `TODO.md` for planned features:
@@ -772,6 +787,8 @@ pnpm setup:db
 # Kill process on specific port
 pnpm kill-port 3000
 ```
+
+**IMPORTANT**: When a port is already in use, terminate the existing process and use the specified port. Do not use alternative ports as substitutes.
 
 **Dependency Issues**:
 

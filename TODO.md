@@ -2,21 +2,39 @@
 
 This document outlines the development tasks needed to implement the enhanced features described in the README.md.
 
+## ✅ Completed: Auth0 Integration
+
+### Authentication Migration
+
+- [x] **Auth0 Setup** - Migrated from Lucia to Auth0 for enterprise-grade authentication
+- [x] **API Server Authentication** - JWT validation with Auth0 JWKS integration
+- [x] **Frontend Authentication** - Auth0 Next.js SDK with protected routes
+- [x] **User Management Integration** - Dynamic user creation from Auth0 identity
+- [x] **Environment Configuration** - Updated all .env.example files for Auth0
+
+### Event-Driven Architecture (Completed)
+
+- [x] **NATS Integration** - Message broker for reliable event publishing
+- [x] **Transactional Outbox Pattern** - Reliable event delivery with database guarantees
+- [x] **User Registration Events** - Auth server publishes UserCreatedEvent via NATS
+- [x] **Event Processing** - Background processor with retry logic and dead letter queue
+- [x] **Docker Configuration** - NATS server with JetStream persistence
+
 ## Phase 1: Foundation Setup
 
 ### 1.1 Project Configuration
 
-- [ ] Update project name in package.json from "monorepo-ts-template" to "fullstack-event-kit"
+- [x] Update project name in package.json from "monorepo-ts-template" to "fullstack-event-kit"
 - [ ] Add shared-types package for common TypeScript interfaces
-- [ ] Update environment variable templates with new authentication secrets
+- [x] Update environment variable templates with Auth0 configuration
 - [ ] Configure Turbo build system for new packages
 
 ### 1.2 Dependencies Installation
 
-- [ ] Install node-cqrs dependencies in API app
-- [ ] Install better-auth dependencies in both API and Web apps
+- [ ] Install node-cqrs dependencies in API app (CQRS implementation pending)
+- [x] Install Auth0 dependencies in both API and Web apps
 - [ ] Install Tremor dependencies in Web app
-- [ ] Update package.json files with new dependencies
+- [x] Update package.json files with Auth0 dependencies
 
 ## Phase 2: Backend Implementation (API)
 
@@ -39,24 +57,23 @@ This document outlines the development tasks needed to implement the enhanced fe
   - [ ] `src/shared/decorators/query-handler.decorator.ts`
   - [ ] `src/shared/decorators/event-handler.decorator.ts`
 
-### 2.2 Authentication Module (better-auth)
+### 2.2 Authentication Module (Auth0) ✅ COMPLETED
 
-- [x] Install better-auth backend dependencies
-  - [x] Add `better-auth` dependency
-  - [x] Add `better-auth/adapters/prisma` for database integration
-- [x] Create authentication module
+- [x] Install Auth0 backend dependencies
+  - [x] Add `@nestjs/passport` dependency
+  - [x] Add `passport-jwt` and `jwks-rsa` for JWT validation
+- [x] Create Auth0 authentication module
   - [x] `src/auth/auth.module.ts`
-  - [x] `src/auth/auth.controller.ts`
-  - [x] `src/auth/auth.service.ts`
-  - [x] `src/auth/auth.config.ts`
-- [x] Configure authentication providers
-  - [x] Email/password authentication
-  - [x] OAuth providers (Google, GitHub)
-  - [x] JWT token management
+  - [x] `src/auth/strategies/jwt.strategy.ts` - Auth0 JWKS integration
+  - [x] `src/auth/guards/auth.guard.ts` - Global authentication guard
+- [x] Configure Auth0 JWT validation
+  - [x] JWKS endpoint integration for automatic key rotation
+  - [x] Audience and issuer validation
+  - [x] User claim extraction and mapping
 - [x] Create authentication guards and decorators
-  - [x] `src/auth/guards/auth.guard.ts`
-  - [x] `src/auth/decorators/current-user.decorator.ts`
-  - [x] `src/auth/decorators/roles.decorator.ts`
+  - [x] `src/auth/guards/auth.guard.ts` - Global auth guard with public route support
+  - [x] `src/auth/decorators/user.decorator.ts` - Current user decorator
+  - [x] `src/auth/decorators/public.decorator.ts` - Public route decorator
 
 ### 2.3 User Domain with CQRS
 
@@ -104,26 +121,23 @@ This document outlines the development tasks needed to implement the enhanced fe
 
 ## Phase 3: Frontend Implementation (Web)
 
-### 3.1 Authentication Setup (better-auth)
+### 3.1 Authentication Setup (Auth0) ✅ COMPLETED
 
-- [ ] Install better-auth client dependencies
-  - [ ] Add `better-auth/client` dependency
-  - [ ] Add `better-auth/plugins` for additional features
-- [ ] Configure authentication client
-  - [ ] `src/lib/auth.ts` - better-auth configuration
-  - [ ] `src/lib/api.ts` - API client with auth headers
-- [ ] Create authentication components
-  - [ ] `src/components/auth/login-form.tsx`
-  - [ ] `src/components/auth/register-form.tsx`
-  - [ ] `src/components/auth/logout-button.tsx`
-  - [ ] `src/components/auth/auth-provider.tsx`
-- [ ] Create authentication pages
-  - [ ] `src/app/auth/login/page.tsx`
-  - [ ] `src/app/auth/register/page.tsx`
-  - [ ] `src/app/auth/callback/page.tsx`
-- [ ] Create authentication hooks
-  - [ ] `src/hooks/use-auth.ts`
-  - [ ] `src/hooks/use-session.ts`
+- [x] Install Auth0 client dependencies
+  - [x] Add `@auth0/nextjs-auth0` dependency
+- [x] Configure Auth0 client
+  - [x] `src/lib/api-client.ts` - API client with Auth0 token integration
+  - [x] `src/app/api/auth/[...auth0]/route.ts` - Auth0 API routes
+- [x] Create Auth0 authentication components
+  - [x] `src/features/auth/components/Auth0LoginButton.tsx` - Login/logout UI
+  - [x] Auth0Provider integration in layout
+- [x] Create authentication pages
+  - [x] `src/app/login/page.tsx` - Auth0 login page
+  - [x] `src/app/dashboard/page.tsx` - Protected dashboard with Auth0
+  - [x] `src/app/profile/page.tsx` - User profile management
+- [x] Implement Auth0 hooks and protection
+  - [x] `useUser` hook from Auth0 SDK
+  - [x] `withPageAuthRequired` for route protection
 
 ### 3.2 Data Visualization Setup (Tremor)
 
@@ -228,25 +242,27 @@ This document outlines the development tasks needed to implement the enhanced fe
 - [ ] Implement error tracking
 - [ ] Add performance monitoring
 
-### 5.5 Event-Driven Architecture with NATS
+### 5.5 Event-Driven Architecture with NATS ✅ COMPLETED
 
-- [ ] Implement NATS microservices communication
-  - [ ] Install `@nestjs/microservices` in both API and Auth servers
-  - [ ] Install `nats` client library
-  - [ ] Configure NATS server in Docker Compose
-- [ ] Create user registration event flow
-  - [ ] Auth server: Emit `UserRegistered` event when user is created
-  - [ ] API server: Listen for `UserRegistered` event and create local user record
-  - [ ] Add event patterns and message contracts
-- [ ] Implement event-driven user synchronization
-  - [ ] `src/auth/events/user-registered.event.ts` (Auth server)
-  - [ ] `src/users/events/user-registered.listener.ts` (API server)
-  - [ ] Add proper error handling and retry logic
-  - [ ] Implement idempotency for event processing
-- [ ] Add NATS configuration
-  - [ ] Environment variables for NATS connection
-  - [ ] Health checks for NATS connectivity
-  - [ ] Graceful shutdown handling
+- [x] Implement NATS microservices communication
+  - [x] Install `@nestjs/microservices` in auth server
+  - [x] Install `nats` client library
+  - [x] Configure NATS server with JetStream in Docker Compose
+- [x] Create user registration event flow
+  - [x] Auth server: Emit `UserCreatedEvent` when user is created
+  - [x] Transactional outbox pattern for reliable event publishing
+  - [x] Event patterns and message contracts defined
+- [x] Implement event-driven architecture
+  - [x] `src/auth/events/domain/user-created.event.ts` (Auth server)
+  - [x] `src/auth/events/infrastructure/outbox.repository.ts` - Event persistence
+  - [x] `src/auth/events/services/event-publisher.service.ts` - NATS publishing
+  - [x] `src/auth/events/services/outbox-processor.service.ts` - Background processing
+  - [x] Proper error handling, retry logic, and dead letter queue
+  - [x] Idempotency and event ordering guarantees
+- [x] Add NATS configuration
+  - [x] Environment variables for NATS connection
+  - [x] NATS health monitoring available at http://localhost:8222
+  - [x] Graceful shutdown and connection management
 
 ## Phase 6: Production Readiness
 
@@ -273,27 +289,38 @@ This document outlines the development tasks needed to implement the enhanced fe
 
 ## Dependencies to Add
 
-### Backend (API)
+### Backend (API) - Auth0 & Event-Driven
 
 ```json
 {
   "dependencies": {
-    "@node-cqrs/core": "^2.0.0",
-    "@node-cqrs/eventstore": "^2.0.0",
-    "better-auth": "^1.0.0",
-    "better-auth/adapters/prisma": "^1.0.0"
+    "@nestjs/passport": "^10.0.3",
+    "@nestjs/microservices": "^11.1.3",
+    "passport-jwt": "^4.0.1",
+    "jwks-rsa": "^3.1.0",
+    "nats": "^2.28.2"
   }
 }
 ```
 
-### Frontend (Web)
+### Frontend (Web) - Auth0
 
 ```json
 {
   "dependencies": {
-    "@tremor/react": "^3.0.0",
-    "better-auth": "^1.0.0",
-    "better-auth/client": "^1.0.0"
+    "@auth0/nextjs-auth0": "^4.8.0",
+    "@tremor/react": "^3.0.0" // Pending implementation
+  }
+}
+```
+
+### Legacy Auth Server
+
+```json
+{
+  "dependencies": {
+    "lucia": "^3.2.2", // To be removed
+    "@lucia-auth/adapter-prisma": "^4.0.1" // To be removed
   }
 }
 ```

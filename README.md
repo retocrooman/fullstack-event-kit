@@ -6,30 +6,33 @@ A comprehensive fullstack TypeScript monorepo template enhanced with modern even
 
 This project extends the [monorepo-ts-template](https://github.com/retocrooman/monorepo-ts-template) with three key enhancements:
 
-- **Event-Driven Architecture** with node-sqrs for implementing CQRS (Command Query Responsibility Segregation) patterns
-- **Modern Authentication** with better-auth for secure, flexible user management
+- **Event-Driven Architecture** with CQRS patterns and NATS messaging for scalable microservices
+- **Modern Authentication** with Auth0 for enterprise-grade user management and security
 - **Data Visualization** with Tremor for building beautiful, responsive dashboards and analytics
 
 ## Enhanced Technology Stack
 
 ### Current Architecture
 
-- **API Server (Port 8080)** - Main business logic server with user management
-- **Web App (Port 3000)** - Next.js frontend with Tremor components
-- **Auth Integration** - better-auth integration (in development)
+- **API Server (Port 8080)** - NestJS backend with Auth0 JWT validation and user management
+- **Web App (Port 3000)** - Next.js frontend with Auth0 authentication and Tremor components
+- **NATS Server (Port 4222)** - Message broker for event-driven communication
+- **Database (PostgreSQL)** - Primary data store with Prisma ORM
 
 ### Backend Technologies
 
 - **NestJS 11.x** - Scalable Node.js framework
 - **PostgreSQL + Prisma** - Type-safe database operations
-- **better-auth** - Modern authentication library (planned)
-- **node-sqrs** - Command Query Responsibility Segregation implementation (planned)
+- **Auth0** - Enterprise authentication and authorization
+- **NATS** - High-performance messaging system with JetStream persistence
+- **Event Sourcing** - Transactional outbox pattern for reliable event publishing
 - **Global Exception Handling** - Centralized error management
 - **Repository Pattern** - Clean data access layer
 
 ### Frontend Technologies
 
 - **Next.js 15.x** - React framework with App Router
+- **Auth0 Next.js SDK** - Client-side authentication with protected routes
 - **Radix UI** - Unstyled, accessible UI components
 - **Tremor** - Beautiful, responsive data visualization components
 - **Tailwind CSS v4** - Utility-first CSS framework
@@ -39,7 +42,10 @@ This project extends the [monorepo-ts-template](https://github.com/retocrooman/m
 
 ### Current Implementation
 
-- **User Management** - Complete CRUD operations with validation
+- **Auth0 Authentication** - Enterprise-grade user authentication and authorization
+- **User Management** - Complete CRUD operations with Auth0 integration
+- **Event-Driven Architecture** - CQRS with transactional outbox pattern
+- **NATS Messaging** - Reliable event publishing and consumption
 - **Global Exception Handling** - Consistent error responses
 - **Repository Pattern** - Clean separation of data access
 - **Health Checks** - Application and database health monitoring
@@ -54,18 +60,53 @@ This project extends the [monorepo-ts-template](https://github.com/retocrooman/m
 
 ### Planned Features
 
-- **Event-Driven Architecture** - CQRS pattern with node-sqrs
-- **Modern Authentication** - better-auth integration
 - **Data Visualization** - Interactive dashboards with Tremor
-- **Event Sourcing** - Complete audit trail of system changes
+- **Advanced Event Sourcing** - Extended event replay and projection capabilities
+- **Multi-tenant Architecture** - Support for multiple organizations
 
 ## Quick Start
+
+### Auth0 Setup (Required)
+
+1. **Create Auth0 Application**
+   - Go to [Auth0 Dashboard](https://manage.auth0.com/)
+   - Create a new "Single Page Application"
+   - Note your Domain, Client ID, and Client Secret
+
+2. **Configure Auth0 Application**
+   - Set Allowed Callback URLs: `http://localhost:3000/api/auth/callback`
+   - Set Allowed Logout URLs: `http://localhost:3000`
+   - Set Allowed Web Origins: `http://localhost:3000`
+
+3. **Create Auth0 API**
+   - Create a new API in Auth0 Dashboard
+   - Set Identifier (Audience): `https://your-api-identifier`
+   - Note the API Identifier for configuration
+
+## Project Setup
 
 ### Prerequisites
 
 - Node.js 23.6.0+
 - pnpm 10.3.0+
 - Docker & Docker Compose
+
+### Environment Configuration
+
+1. **Copy environment template**
+   ```bash
+   cp .env.example .env.local
+   ```
+
+2. **Configure Auth0 variables in .env.local**
+   ```env
+   AUTH0_SECRET=your-long-random-secret-key-for-session-encryption-minimum-32-characters
+   AUTH0_BASE_URL=http://localhost:3000
+   AUTH0_ISSUER_BASE_URL=https://your-tenant.auth0.com
+   AUTH0_CLIENT_ID=your-client-id
+   AUTH0_CLIENT_SECRET=your-client-secret
+   AUTH0_AUDIENCE=https://your-api-identifier
+   ```
 
 ### Complete Setup
 
@@ -76,7 +117,7 @@ pnpm setup
 # This will:
 # 1. Install all dependencies
 # 2. Build all packages
-# 3. Start PostgreSQL container
+# 3. Start PostgreSQL and NATS containers
 # 4. Push database schema
 # 5. Configure git hooks
 ```
@@ -102,56 +143,55 @@ curl http://localhost:3000
 - `GET /health-check` - Application health status
 - `GET /health-check/db` - Database connectivity status
 
-### User Management
+### Authentication (Auth0)
 
-- `GET /users` - Get all users
-- `GET /users/:id` - Get user by ID
-- `POST /users` - Create new user
-- `PUT /users/:id` - Update user
-- `DELETE /users/:id` - Delete user
+- `GET /api/auth/login` - Initiate Auth0 login
+- `GET /api/auth/logout` - Auth0 logout
+- `GET /api/auth/callback` - Auth0 callback handler
 
-### Planned Endpoints
+### User Management (Protected)
 
-- **Authentication** - `/auth/*` routes (better-auth integration)
-- **Events** - `/events/*` routes (CQRS/Event Sourcing)
-- **Dashboard** - `/analytics/*` routes (Tremor visualization)
+- `GET /users` - Get all users (public for testing)
+- `GET /users/me` - Get current user profile (requires Auth0 token)
+- `PUT /users/me` - Update current user profile (requires Auth0 token)
+- `GET /users/:id` - Get user by ID (public for testing)
+- `PUT /users/:id` - Update user (public for testing)
+
+### Event System
+
+- **NATS Messaging** - Event publishing and consumption via NATS
+- **Outbox Pattern** - Reliable event delivery with transactional guarantees
 
 ## Environment Configuration
 
-### API Server (.env)
+### Complete Environment Variables (.env.local)
 
 ```env
-# Server Configuration
-PORT=8080
-NODE_ENV=development
+# Auth0 Configuration (Required)
+AUTH0_SECRET=your-long-random-secret-key-for-session-encryption-minimum-32-characters
+AUTH0_BASE_URL=http://localhost:3000
+AUTH0_ISSUER_BASE_URL=https://your-tenant.auth0.com
+AUTH0_CLIENT_ID=your-client-id
+AUTH0_CLIENT_SECRET=your-client-secret
+AUTH0_AUDIENCE=https://your-api-identifier
+AUTH0_SCOPE=openid profile email
 
-# Database
-DATABASE_URL="postgresql://postgres:postgres@localhost:5433/fullstack_event_kit"
+# Database Configuration
+DATABASE_URL=postgresql://user:password@localhost:5433/api_db?schema=public
 
-# better-auth (planned)
-BETTER_AUTH_URL=http://localhost:8080
-BETTER_AUTH_SECRET=your-secret-key-here
+# API Server Configuration
+API_PORT=8080
+API_BASE_URL=http://localhost:8080
+ALLOWED_ORIGINS=http://localhost:3000
 
-# Application
-APP_NAME=fullstack-event-kit
-```
+# NATS Configuration
+NATS_HOST=localhost
+NATS_PORT=4222
 
-### Web Application (.env.local)
-
-```env
-# API Configuration
-NEXT_PUBLIC_API_HTTP_URL=http://localhost:8080
-NEXT_PUBLIC_HOST=local
-
-# better-auth (planned)
-NEXT_PUBLIC_AUTH_URL=http://localhost:8080
-```
-
-### Development Database
-
-```env
-# PostgreSQL Container
-DATABASE_URL="postgresql://postgres:postgres@localhost:5433/fullstack_event_kit"
+# Event Processing
+OUTBOX_PROCESSING_INTERVAL_MS=5000
+OUTBOX_CLEANUP_INTERVAL_MS=3600000
+OUTBOX_RETENTION_DAYS=7
 ```
 
 ## Testing
@@ -200,12 +240,13 @@ Tests use isolated database environment configured in `apps/api/src/test-setup.t
 - **Flexibility** - Easy to switch database implementations
 - **Type Safety** - Strongly typed interfaces
 
-### Why better-auth?
+### Why Auth0?
 
-- **Modern API** - Clean, intuitive authentication library
-- **Framework Agnostic** - Works with any Node.js framework
-- **TypeScript Support** - Full type safety
-- **Extensible** - Easy to customize and extend
+- **Enterprise Security** - Industry-leading authentication and authorization
+- **Zero Maintenance** - Fully managed service with automatic updates
+- **Scalable** - Handles millions of users without infrastructure concerns
+- **Rich Ecosystem** - Extensive integrations and advanced features
+- **Compliance Ready** - SOC2, GDPR, HIPAA compliant out of the box
 
 ## Project Structure
 
@@ -214,19 +255,21 @@ fullstack-event-kit/
 ├── apps/
 │   ├── api/                 # NestJS API server (port 8080)
 │   │   ├── src/
-│   │   │   ├── users/      # User management module
+│   │   │   ├── auth/       # Auth0 JWT validation
+│   │   │   ├── users/      # User management with Auth0 integration
 │   │   │   ├── infrastructure/ # Repository implementations
 │   │   │   ├── shared/     # Exception handling & filters
 │   │   │   └── config/     # Environment configuration
 │   │   ├── test/           # E2E tests
 │   │   └── prisma/         # Database schema
-│   ├── auth/               # Authentication service (planned)
+│   ├── auth/               # Legacy auth service (to be removed)
 │   └── web/                # Next.js frontend (port 3000)
 │       └── src/
-│           ├── app/        # App Router pages
-│           └── features/   # Feature-based organization
+│           ├── app/        # App Router with Auth0 protection
+│           ├── features/   # Feature-based organization
+│           └── lib/        # API client with Auth0 tokens
 ├── rest-client/            # HTTP request files
-└── dockers/               # Docker configurations
+└── dockers/               # Docker configurations (PostgreSQL + NATS)
 ```
 
 ## Common Commands

@@ -1,3 +1,4 @@
+import { UserProvider } from '@auth0/nextjs-auth0/client';
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
@@ -26,7 +27,9 @@ export default function RootLayout({
   return (
     <html lang='ja'>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <QueryProvider>{children}</QueryProvider>
+        <UserProvider>
+          <QueryProvider>{children}</QueryProvider>
+        </UserProvider>
       </body>
     </html>
   );
