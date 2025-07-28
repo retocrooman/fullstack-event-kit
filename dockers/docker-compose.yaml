@@ -13,24 +13,25 @@ services:
       - api-db-data:/var/lib/postgresql/data
     restart: unless-stopped
 
-  # NATS Message Bus
-  nats:
-    image: nats:2.10.24-alpine
-    container_name: nats-server
+  # MongoDB for Event Store
+  eventstore-mongodb:
+    image: mongo:7
+    container_name: eventstore-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: eventstore
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: eventstore
     ports:
-      - '4222:4222'  # Client connections
-      - '8222:8222'  # HTTP monitoring
-      - '6222:6222'  # Cluster connections
-    command: ['--js', '--sd', '/data']  # Enable JetStream and store data
+      - '27017:27017'
     volumes:
-      - nats-data:/data
+      - eventstore-mongodb-data:/data/db
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'nc', '-z', 'localhost', '4222']
+      test: ['CMD', 'mongosh', '--eval', 'db.adminCommand("ping")']
       interval: 30s
       timeout: 10s
       retries: 3
 
 volumes:
   api-db-data:
-  nats-data:
+  eventstore-mongodb-data:

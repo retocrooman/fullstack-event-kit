@@ -9,27 +9,28 @@ datasource db {
   relationMode = "foreignKeys"
 }
 
-// Event Store tables
-model EventStore {
-  id            String   @id @default(cuid())
-  aggregateId   String   @map("aggregate_id")
-  aggregateType String   @map("aggregate_type")
-  eventType     String   @map("event_type")
-  eventData     Json     @map("event_data")
-  eventVersion  Int      @map("event_version")
-  timestamp     DateTime @default(now())
+// Outbox pattern for reliable event publishing
+model Outbox {
+  id          String    @id @default(cuid())
+  aggregateId String    @map("aggregate_id")
+  eventType   String    @map("event_type")
+  eventData   Json      @map("event_data")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  processedAt DateTime? @map("processed_at")
 
-  @@unique([aggregateId, eventVersion])
-  @@map("event_store")
+  @@index([processedAt])
+  @@map("outbox")
 }
 
-model AggregateSnapshot {
-  id            String   @id @default(cuid())
-  aggregateId   String   @unique @map("aggregate_id")
-  aggregateType String   @map("aggregate_type")
-  data          Json
-  version       Int
-  timestamp     DateTime @default(now())
+// Inbox pattern for idempotent event processing
+model Inbox {
+  id          String    @id @default(cuid())
+  messageId   String    @unique @map("message_id") // External message ID for deduplication
+  eventType   String    @map("event_type")
+  eventData   Json      @map("event_data")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  processedAt DateTime? @map("processed_at")
 
-  @@map("aggregate_snapshots")
+  @@index([processedAt])
+  @@map("inbox")
 }

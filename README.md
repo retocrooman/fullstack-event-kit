@@ -5,7 +5,7 @@ A fullstack TypeScript monorepo template built with **Domain-Driven Design (DDD)
 ## Features
 
 - **Domain-Driven Design** - Clean separation with proper domain modeling
-- **CQRS & Event Sourcing** - Command Query Responsibility Segregation with node-cqrs
+- **CQRS & Event Sourcing** - Command Query Responsibility Segregation with node-eventstore
 - **Modular Architecture** - Feature-based modules with clear layer separation
 - **Auth0 Authentication** - Enterprise-grade user management
 - **Data Visualization** - Tremor components for dashboards
@@ -39,7 +39,7 @@ src/modules/[feature]/
 - **Framework**: NestJS 11.x with TypeScript 5.x
 - **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: Auth0 integration with JWT validation
-- **CQRS & Event Sourcing**: node-cqrs library
+- **CQRS & Event Sourcing**: node-eventstore library with MongoDB storage
 - **Testing**: Jest with comprehensive test coverage
 
 ### Frontend
@@ -54,6 +54,8 @@ src/modules/[feature]/
 - **Build System**: Turborepo
 - **Containerization**: Docker & Docker Compose
 - **Database**: PostgreSQL (containerized)
+- **Event Store**: MongoDB (containerized)
+- **Message Bus**: NATS (containerized)
 
 ## Key Features
 
@@ -115,6 +117,8 @@ pnpm web lint          # Lint web code
 - **API Server**: http://localhost:8080
 - **Web Application**: http://localhost:3000
 - **Database (PostgreSQL)**: localhost:5433
+- **Event Store (MongoDB)**: localhost:27017
+- **Message Bus (NATS)**: localhost:4222 (client), localhost:8222 (monitoring)
 
 ## API Documentation
 
@@ -133,6 +137,12 @@ pnpm web lint          # Lint web code
 - `GET /accounts/search?q=term` - Search accounts
 - `GET /accounts/stats` - Get account statistics
 - `DELETE /accounts/:id` - Delete account
+
+### Health Check Endpoints
+- `GET /health-check` - General API health status
+- `GET /health-check/database` - PostgreSQL database health
+- `GET /health-check/eventstore` - MongoDB eventstore health
+- `GET /health-check/all` - All services health status
 
 All endpoints include OpenAPI/Swagger documentation, request/response validation, and consistent error handling.
 

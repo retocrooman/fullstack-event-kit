@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { CommandBusService } from '../../../cqrs/services/command-bus.service';
-import { EventStoreService } from '../../../cqrs/services/event-store.service';
+import { CommandBusService } from '../../../event-sourcing/services/command-bus.service';
+import { EventStoreService } from '../../../event-sourcing/services/event-store.service';
 
 @Injectable()
 export class AccountCommandService {
@@ -10,7 +10,9 @@ export class AccountCommandService {
   ) {}
 
   async addCoins(accountId: string, amount: number): Promise<void> {
-    await this.commandBus.commandBus.send('AddCoins', accountId, {
+    await this.commandBus.execute({
+      aggregateId: accountId,
+      type: 'AddCoins',
       payload: {
         accountId,
         amount,
@@ -19,7 +21,9 @@ export class AccountCommandService {
   }
 
   async deductCoins(accountId: string, amount: number): Promise<void> {
-    await this.commandBus.commandBus.send('DeductCoins', accountId, {
+    await this.commandBus.execute({
+      aggregateId: accountId,
+      type: 'DeductCoins',
       payload: {
         accountId,
         amount,
@@ -28,7 +32,9 @@ export class AccountCommandService {
   }
 
   async setCoins(accountId: string, coins: number): Promise<void> {
-    await this.commandBus.commandBus.send('SetCoins', accountId, {
+    await this.commandBus.execute({
+      aggregateId: accountId,
+      type: 'SetCoins',
       payload: {
         accountId,
         coins,
@@ -42,7 +48,9 @@ export class AccountCommandService {
     }
 
     // Transfer from the FROM account
-    await this.commandBus.commandBus.send('TransferCoins', fromAccountId, {
+    await this.commandBus.execute({
+      aggregateId: fromAccountId,
+      type: 'TransferCoins',
       payload: {
         fromAccountId,
         toAccountId,
@@ -51,7 +59,9 @@ export class AccountCommandService {
     });
 
     // Add coins to the TO account
-    await this.commandBus.commandBus.send('AddCoins', toAccountId, {
+    await this.commandBus.execute({
+      aggregateId: toAccountId,
+      type: 'AddCoins',
       payload: {
         accountId: toAccountId,
         amount,
@@ -60,7 +70,9 @@ export class AccountCommandService {
   }
 
   async deleteAccount(accountId: string): Promise<void> {
-    await this.commandBus.commandBus.send('DeleteAccount', accountId, {
+    await this.commandBus.execute({
+      aggregateId: accountId,
+      type: 'DeleteAccount',
       payload: {
         accountId,
       },

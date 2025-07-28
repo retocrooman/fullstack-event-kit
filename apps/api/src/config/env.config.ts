@@ -4,6 +4,12 @@ export interface ApiConfig {
   port: number;
   nodeEnv: string;
   databaseUrl: string;
+  eventstoreMongodbUrl: string;
+  eventstoreMongodbHost: string;
+  eventstoreMongodbPort: number;
+  eventstoreMongodbDbName: string;
+  eventstoreMongodbUsername: string;
+  eventstoreMongodbPassword: string;
   jwtPublicKey: string;
   authServerUrl: string;
   allowedOrigins: string[];
@@ -41,6 +47,12 @@ export class EnvConfig {
       port: parseInt(optional('PORT', '8080'), 10),
       nodeEnv: optional('NODE_ENV', 'development'),
       databaseUrl: optional('DATABASE_URL', 'postgresql://user:password@localhost:5433/api_db?schema=public'),
+      eventstoreMongodbUrl: optional('EVENTSTORE_MONGODB_URL', 'mongodb://eventstore:password@localhost:27017/eventstore?authSource=admin'),
+      eventstoreMongodbHost: optional('EVENTSTORE_MONGODB_HOST', 'localhost'),
+      eventstoreMongodbPort: parseInt(optional('EVENTSTORE_MONGODB_PORT', '27017'), 10),
+      eventstoreMongodbDbName: optional('EVENTSTORE_MONGODB_DB_NAME', 'eventstore'),
+      eventstoreMongodbUsername: optional('EVENTSTORE_MONGODB_USERNAME', 'eventstore'),
+      eventstoreMongodbPassword: optional('EVENTSTORE_MONGODB_PASSWORD', 'password'),
       jwtPublicKey: required('JWT_PUBLIC_KEY').replace(/\\n/g, '\n'),
       authServerUrl: optional('AUTH_SERVER_URL', 'http://localhost:4000'),
       allowedOrigins: optional('ALLOWED_ORIGINS', 'http://localhost:3000').split(','),
@@ -62,6 +74,30 @@ export class EnvConfig {
 
   static get databaseUrl(): string {
     return this.config.databaseUrl;
+  }
+
+  static get eventstoreMongodbUrl(): string {
+    return this.config.eventstoreMongodbUrl;
+  }
+
+  static get eventstoreMongodbHost(): string {
+    return this.config.eventstoreMongodbHost;
+  }
+
+  static get eventstoreMongodbPort(): number {
+    return this.config.eventstoreMongodbPort;
+  }
+
+  static get eventstoreMongodbDbName(): string {
+    return this.config.eventstoreMongodbDbName;
+  }
+
+  static get eventstoreMongodbUsername(): string {
+    return this.config.eventstoreMongodbUsername;
+  }
+
+  static get eventstoreMongodbPassword(): string {
+    return this.config.eventstoreMongodbPassword;
   }
 
   static get jwtPublicKey(): string {

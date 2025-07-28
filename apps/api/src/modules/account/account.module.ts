@@ -1,19 +1,19 @@
 import { Module } from '@nestjs/common';
-import { CQRSModule } from '../cqrs/cqrs.module';
+import { EventSourcingModule } from '../event-sourcing/event-sourcing.module';
 import { AccountCommandService } from './application/commands/account-command.service';
 import { AccountQueryService } from './application/queries/account-query.service';
 import { AccountController } from './presentation/controllers/account.controller';
 
 @Module({
-  imports: [CQRSModule],
+  imports: [EventSourcingModule],
   controllers: [AccountController],
   providers: [
-    // CQRS Services
+    // Event Sourcing Services
     AccountCommandService,
     AccountQueryService,
   ],
   exports: [
-    // Export CQRS services for other modules if needed
+    // Export Event Sourcing services for other modules if needed
     AccountCommandService,
     AccountQueryService,
   ],

@@ -7,14 +7,14 @@ import { HealthController } from './health.controller';
 import { AccountModule } from './modules/account/account.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AuthGuard } from './modules/auth/guards/auth.guard';
-import { CQRSModule } from './modules/cqrs/cqrs.module';
+import { EventSourcingModule } from './modules/event-sourcing/event-sourcing.module';
 import { PrismaService } from './prisma.service';
-import { GlobalExceptionFilter } from './shared';
+import { GlobalExceptionFilter, MongoDBHealthIndicator } from './shared';
 
 @Module({
   imports: [
     TerminusModule,
-    CQRSModule,
+    EventSourcingModule,
     AuthModule,
     AccountModule,
   ],
@@ -25,6 +25,7 @@ import { GlobalExceptionFilter } from './shared';
   providers: [
     AppService,
     PrismaService,
+    MongoDBHealthIndicator,
     {
       provide: APP_PIPE,
       useClass: ValidationPipe,

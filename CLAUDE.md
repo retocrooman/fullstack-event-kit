@@ -97,6 +97,12 @@ Follow conventional commits: `<type>: <description>`
 ### Environment Variables
 
 - **Security**: Never commit `.env` files or share actual values.
+- **EnvConfig Usage**: ALWAYS use the `EnvConfig` class to access environment variables instead of directly accessing `process.env`. This ensures type safety and centralized configuration management.
+- **Adding New Variables**: When adding new environment variables:
+  1. Add the variable to the `ApiConfig` interface in `src/config/env.config.ts`
+  2. Add the variable to the `loadConfig()` method with appropriate default values
+  3. Add a static getter method for easy access
+  4. Update both `.env` and `.env.example` files
 
 ### Error Handling
 

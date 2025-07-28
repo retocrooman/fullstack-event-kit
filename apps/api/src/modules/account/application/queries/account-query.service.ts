@@ -1,13 +1,11 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { EventStoreService } from '../../../cqrs/services/event-store.service';
+import { Injectable } from '@nestjs/common';
+import { EventStoreService } from '../../../event-sourcing/services/event-store.service';
 import { AccountAggregate, AccountState } from '../../domain/aggregates/account.aggregate';
 
 @Injectable()
 export class AccountQueryService {
   constructor(
     private readonly eventStore: EventStoreService,
-    @Inject('CQRS_CONTAINER')
-    private readonly cqrsContainer: any,
   ) {}
 
   async getAccountById(id: string): Promise<AccountState> {
@@ -103,15 +101,21 @@ export class AccountQueryService {
   }
 
   private async loadAggregate(id: string): Promise<AccountAggregate> {
-    // Use node-cqrs built-in aggregate loading mechanism
     try {
-      // node-cqrs provides aggregate loading through the container
-      const aggregate = await this.cqrsContainer.eventStore.getAggregate(AccountAggregate, id);
+      // Load events from the event store
+      const events = await this.eventStore.getEvents(id);
+      const aggregate = new AccountAggregate(id);
+      
+      // Load the aggregate from its event history
+      if (events && events.length > 0) {
+        aggregate.loadFromHistory(events);
+      }
+      
       return aggregate;
     } catch (error) {
       // If aggregate doesn't exist or no events, return empty aggregate
       console.log(`No events found for aggregate ${id}, returning empty aggregate`);
-      return new AccountAggregate({ id });
+      return new AccountAggregate(id);
     }
   }
 
