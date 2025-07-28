@@ -1,8 +1,0 @@
-{
-  "extends": "@repo/tsconfig/nest-build.json",
-  "compilerOptions": {
-    "outDir": "./dist",
-    "baseUrl": "./src"
-  },
-  "include": ["src/**/*"]
-}

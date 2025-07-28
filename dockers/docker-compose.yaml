@@ -13,20 +13,6 @@ services:
       - api-db-data:/var/lib/postgresql/data
     restart: unless-stopped
 
-  # Auth Server Database
-  auth-db:
-    image: postgres:16
-    container_name: auth-db
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: auth_db
-    ports:
-      - '5434:5432'
-    volumes:
-      - auth-db-data:/var/lib/postgresql/data
-    restart: unless-stopped
-
   # NATS Message Bus
   nats:
     image: nats:2.10.24-alpine
@@ -47,5 +33,4 @@ services:
 
 volumes:
   api-db-data:
-  auth-db-data:
   nats-data:

@@ -136,12 +136,11 @@ pnpm web <command>  # Run command in Web workspace
 
 ### Port Configuration
 
-- **API Server**: http://localhost:8080 (現在動作中)
-- **Web Application**: http://localhost:3000 (Next.js開発サーバー)
-- **Auth Server**: http://localhost:4000 (apps/auth - 独立認証サーバー)
-- **Database (PostgreSQL)**: localhost:5433 (API), localhost:5434 (Auth)
+- **API Server**: http://localhost:8080 (NestJS with Auth0 JWT validation)
+- **Web Application**: http://localhost:3000 (Next.js with Auth0 authentication)
+- **Database (PostgreSQL)**: localhost:5433 (API database)
 - **NATS Message Bus**: localhost:4222 (client), localhost:8222 (monitoring)
-- **Better Auth**: 実装予定 - API server port (8080) with `/auth/*` routes
+- **Auth0**: External service for authentication and user management
 
 ## Code Style and Conventions
 
@@ -234,17 +233,16 @@ The project uses the following Prettier settings:
 
 **CRITICAL**: Before completing ANY code change task, you MUST:
 
-1. Run all relevant tests: `pnpm api test` or `pnpm auth test`
+1. Run all relevant tests: `pnpm api test`
 2. Run E2E tests if applicable: `pnpm api test:e2e`
 3. **LINT VERIFICATION**: Run linting for the workspace you modified:
    - For API changes: `pnpm api lint`
-   - For Auth changes: `pnpm auth lint`
    - For Web changes: `pnpm web lint`
 4. Verify ALL tests pass and ALL lint checks pass
 5. If tests or linting fail, fix issues and re-run until all pass
 6. Never mark a task complete with failing tests or lint errors
 7. **IMPORTANT**: Continue fixing until ALL tests and linting pass - no exceptions
-8. **BUILD VERIFICATION**: After tests and lint pass, run `pnpm api build` or `pnpm auth build` and ensure build succeeds
+8. **BUILD VERIFICATION**: After tests and lint pass, run `pnpm api build` and ensure build succeeds
 9. If build fails, fix all TypeScript/compilation errors and rebuild
 
 ### Test Structure
@@ -253,8 +251,7 @@ The project uses the following Prettier settings:
 - **E2E Tests**: Located in `test/` directory (`*.e2e-spec.ts`)
 - **Test Environment Configuration**:
   - **API app**: `apps/api/src/test-setup.ts` (環境変数を直接設定)  
-  - **Auth app**: `apps/auth/.env.test` (ファイルベース設定)
-  - 両方とも同じ目的（テスト環境変数設定）だが異なるアプローチ
+  - **Web app**: Cypress環境設定ファイルでE2Eテスト環境を管理
 
 ### Running Tests
 
@@ -334,39 +331,30 @@ pnpm i                    # Install dependencies
 
 # Development
 pnpm api start:dev        # Start API in watch mode
-pnpm auth start:dev       # Start auth server in watch mode
 pnpm web dev             # Start web app in dev mode
 
 # Building
 pnpm build               # Build all packages
 pnpm rebuild             # Force rebuild all packages
 pnpm api build           # Build API only
-pnpm auth build          # Build auth server only
 pnpm web build           # Build web only
 
 # Testing
 pnpm api test            # Run API tests
-pnpm auth test           # Run auth server tests
 pnpm api test:e2e        # Run E2E tests
-pnpm auth test:e2e       # Run auth E2E tests
 pnpm api test:cov        # Run tests with coverage
-pnpm auth test:cov       # Run auth tests with coverage
+pnpm web test:e2e        # Run web E2E tests (Cypress)
 pnpm test:container      # Test Docker containers
 
 # Database
 pnpm api db:generate     # Generate Prisma client
-pnpm auth db:generate    # Generate auth Prisma client
 pnpm api db:push         # Push schema to database
-pnpm auth db:push        # Push auth schema to database
 pnpm api db:force-push   # Force push (data loss warning!)
-pnpm auth db:force-push  # Force push auth schema (data loss warning!)
 
 # Code Quality
 pnpm api lint            # Lint API code
-pnpm auth lint           # Lint auth code
 pnpm web lint            # Lint web code
 pnpm api format          # Format API code
-pnpm auth format         # Format auth code
 
 # Docker & Infrastructure
 pnpm setup:db            # Start database containers and NATS
