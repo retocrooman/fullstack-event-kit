@@ -2,16 +2,16 @@ import { Injectable, Inject } from '@nestjs/common';
 
 /**
  * EventStoreService provides a high-level interface for event sourcing operations.
- * 
+ *
  * This service wraps the node-eventstore library to offer:
  * - Event persistence: Saves domain events to MongoDB storage
  * - Event retrieval: Loads event history for specific aggregates
  * - Stream management: Handles event stream creation, appending, and committing
  * - Health monitoring: Provides connection status for health checks
- * 
+ *
  * The service uses dependency injection to receive a configured eventstore instance
  * and provides Promise-based methods for async operations with proper error handling.
- * 
+ *
  * Key operations:
  * - getEvents(aggregateId): Retrieves all events for a specific aggregate
  * - saveEvents(aggregateId, events): Persists new events to an aggregate's stream
@@ -43,7 +43,7 @@ export class EventStoreService {
           }
           return;
         }
-        
+
         // Get all events from the stream
         const events = stream.events || [];
         resolve(events);
@@ -66,7 +66,7 @@ export class EventStoreService {
         });
 
         // Commit the stream
-        stream.commit((commitErr) => {
+        stream.commit(commitErr => {
           if (commitErr) {
             reject(commitErr);
           } else {

@@ -11,6 +11,9 @@
     "source.fixAll.eslint": "explicit"
   },
 
+  // Disable Biome
+  "biome.enabled": false,
+
   // cSpell settings
   "cSpell.words": ["deepseek", "ollama", "eventstore"]
 }
