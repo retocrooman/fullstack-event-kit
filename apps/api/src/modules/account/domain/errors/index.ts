@@ -29,3 +29,9 @@ export class InvalidTransferError extends DomainError {
     super(`Invalid transfer: ${reason}`);
   }
 }
+
+export class AccountNotFoundError extends DomainError {
+  constructor(accountId: string) {
+    super(`Account ${accountId} does not exist`);
+  }
+}

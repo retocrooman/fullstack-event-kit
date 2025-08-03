@@ -2,6 +2,7 @@ import { ConflictException } from '@nestjs/common';
 import { BaseAggregate, DomainEvent } from '../../../cqrs/base/base.aggregate';
 import {
   AccountDeletedError,
+  AccountNotFoundError,
   InsufficientCoinsError,
   InvalidAmountError,
   InvalidTransferError,
@@ -135,7 +136,7 @@ export class AccountAggregate extends BaseAggregate {
   TransferCoins(payload: { fromAccountId: string; toAccountId: string; amount: number }) {
     // For transfers, account must exist - cannot transfer from non-existent account
     if (!this.accountState || this.accountState.id !== payload.fromAccountId) {
-      throw new Error(`Account ${payload.fromAccountId} does not exist`);
+      throw new AccountNotFoundError(payload.fromAccountId);
     }
 
     this._ensureAccountNotDeleted();
@@ -160,7 +161,7 @@ export class AccountAggregate extends BaseAggregate {
   DeleteAccount(payload: { accountId: string }) {
     // Cannot delete non-existent account
     if (!this.accountState || this.accountState.id !== payload.accountId) {
-      throw new Error(`Account ${payload.accountId} does not exist`);
+      throw new AccountNotFoundError(payload.accountId);
     }
 
     this._ensureAccountNotDeleted();
