@@ -1,65 +1,43 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { ConcurrencyConflictError } from '../errors/concurrency-conflict.error';
 import { EventStore } from '../types/eventstore.types';
+import { InmemoryStoreService } from './inmemory-store.service';
+import { MongoDbStoreService } from './mongo-db-store.service';
 
 @Injectable()
 export class EventStoreService {
+  private mongoDbStore: MongoDbStoreService | null = null;
+  private inmemoryStore: InmemoryStoreService | null = null;
+
   constructor(
     @Inject('EVENT_STORE')
     private eventStore: Promise<EventStore>,
   ) {}
 
-  async getEvents(aggregateId: string): Promise<any[]> {
+  private async getStoreInstance(): Promise<MongoDbStoreService | InmemoryStoreService> {
     const eventStore = await this.eventStore;
-    return new Promise(resolve => {
-      eventStore.getEventStream(aggregateId, (err, stream) => {
-        resolve(stream?.events || []);
-      });
-    });
+    const client = eventStore.store?.client || eventStore.client;
+
+    if (client) {
+      if (!this.mongoDbStore) {
+        this.mongoDbStore = new MongoDbStoreService(eventStore);
+      }
+      return this.mongoDbStore;
+    } else {
+      if (!this.inmemoryStore) {
+        this.inmemoryStore = new InmemoryStoreService(eventStore);
+      }
+      return this.inmemoryStore;
+    }
+  }
+
+  async getEvents(aggregateId: string): Promise<any[]> {
+    const store = await this.getStoreInstance();
+    return store.getEvents(aggregateId);
   }
 
   async saveEvents(aggregateId: string, events: any[]): Promise<void> {
-    if (events.length === 0) return;
-
-    const eventStore = await this.eventStore;
-    return new Promise((resolve, reject) => {
-      eventStore.getEventStream(aggregateId, (err, stream) => {
-        if (err && !err.message?.includes('not found')) {
-          reject(err);
-          return;
-        }
-
-        // Use existing stream or create new one by calling again
-        if (stream) {
-          try {
-            this.checkVersionConflict(aggregateId, events, stream);
-            events.forEach(event => stream.addEvent(event));
-            stream.commit(commitErr => (commitErr ? reject(commitErr) : resolve()));
-          } catch (error) {
-            reject(error);
-          }
-        } else {
-          // For new streams, get a fresh stream
-          eventStore.getEventStream(aggregateId, (newErr, newStream) => {
-            if (newErr) {
-              reject(newErr);
-              return;
-            }
-            if (newStream) {
-              try {
-                this.checkVersionConflict(aggregateId, events, newStream);
-                events.forEach(event => newStream.addEvent(event));
-                newStream.commit(commitErr => (commitErr ? reject(commitErr) : resolve()));
-              } catch (error) {
-                reject(error);
-              }
-            } else {
-              reject(new Error('Failed to create stream'));
-            }
-          });
-        }
-      });
-    });
+    const store = await this.getStoreInstance();
+    return store.saveEvents(aggregateId, events);
   }
 
   async saveEventsTransaction(operations: Array<{ aggregateId: string; events: any[] }>): Promise<void> {
@@ -68,99 +46,16 @@ export class EventStoreService {
 
     const eventStore = await this.eventStore;
     const client = eventStore.store?.client || eventStore.client;
+    const store = await this.getStoreInstance();
 
-    if (client) {
-      await this.saveEventsWithMongoTransaction(validOperations, client);
-    } else {
-      await this.saveEventsWithInmemoryTransaction(validOperations);
+    if (client && store instanceof MongoDbStoreService) {
+      await store.saveEventsWithTransaction(validOperations, client);
+    } else if (store instanceof InmemoryStoreService) {
+      await store.saveEventsWithTransaction(validOperations);
     }
-  }
-
-  private async saveEventsWithMongoTransaction(
-    operations: Array<{ aggregateId: string; events: any[] }>,
-    client: any,
-  ): Promise<void> {
-    const session = client.startSession();
-    try {
-      await session.withTransaction(async () => {
-        for (const { aggregateId, events } of operations) {
-          await this.saveEvents(aggregateId, events);
-        }
-      });
-    } finally {
-      await session.endSession();
-    }
-  }
-
-  private async saveEventsWithInmemoryTransaction(
-    operations: Array<{ aggregateId: string; events: any[] }>,
-  ): Promise<void> {
-    const savedStates: Array<{ aggregateId: string; originalEvents: any[] }> = [];
-
-    try {
-      // Collect original states for rollback
-      for (const { aggregateId } of operations) {
-        const originalEvents = await this.getEvents(aggregateId);
-        savedStates.push({ aggregateId, originalEvents });
-      }
-
-      // Execute all operations
-      for (const { aggregateId, events } of operations) {
-        await this.saveEvents(aggregateId, events);
-      }
-    } catch (error) {
-      // Rollback: restore original states
-      for (const { aggregateId, originalEvents } of savedStates) {
-        try {
-          await this.restoreEvents(aggregateId, originalEvents);
-        } catch (rollbackError) {
-          console.error(`Failed to rollback ${aggregateId}:`, rollbackError);
-        }
-      }
-      throw error;
-    }
-  }
-
-  private async restoreEvents(aggregateId: string, events: any[]): Promise<void> {
-    // This is a simplified rollback - in production you'd need more sophisticated logic
-    const eventStore = await this.eventStore;
-    return new Promise((resolve, reject) => {
-      eventStore.getEventStream(aggregateId, (err: any, stream: any) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        if (stream) {
-          // Clear existing events (simplified approach)
-          stream.events = events;
-          resolve();
-        } else {
-          resolve();
-        }
-      });
-    });
   }
 
   async getEventStore(): Promise<EventStore> {
     return this.eventStore;
-  }
-
-  private getCurrentVersion(stream: any): number {
-    // EventStore uses different properties for stream version:
-    // - lastRevision: final committed revision (preferred)
-    // - currentRevision: current working revision  
-    // - fallback to -1 for new streams
-    return stream.lastRevision ?? stream.currentRevision ?? -1;
-  }
-
-  private checkVersionConflict(aggregateId: string, events: any[], stream: any): void {
-    if (events.length > 0 && events[0].version !== undefined) {
-      const currentVersion = this.getCurrentVersion(stream);
-      const expectedVersion = events[0].version - 1;
-
-      if (expectedVersion !== currentVersion) {
-        throw new ConcurrencyConflictError(aggregateId, expectedVersion, currentVersion);
-      }
-    }
   }
 }

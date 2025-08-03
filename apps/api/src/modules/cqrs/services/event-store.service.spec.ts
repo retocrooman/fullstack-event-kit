@@ -225,32 +225,18 @@ describe('EventStoreService', () => {
       const initialEvents1 = await service.getEvents(aggregateId1);
       expect(initialEvents1).toHaveLength(1);
 
-      // Create a scenario that will fail during transaction
-      const originalSaveEvents = service.saveEvents;
-      let callCount = 0;
-      service.saveEvents = jest.fn().mockImplementation(async (aggregateId, events) => {
-        callCount++;
-        if (callCount === 2) {
-          throw new Error('Simulated transaction failure');
-        }
-        return originalSaveEvents.call(service, aggregateId, events);
-      });
-
+      // Create a scenario that will fail during transaction by using invalid version
       const operations = [
-        { aggregateId: aggregateId1, events: [{ eventType: 'Update1', payload: {} }] },
-        { aggregateId: aggregateId2, events: [{ eventType: 'New2', payload: {} }] },
+        { aggregateId: aggregateId1, events: [{ eventType: 'Update1', payload: {}, version: 0 }] }, // Should be version 1
+        { aggregateId: aggregateId2, events: [{ eventType: 'New2', payload: {}, version: 0 }] },
       ];
 
-      // This should fail
-      await expect(service.saveEventsTransaction(operations)).rejects.toThrow('Simulated transaction failure');
+      // This should fail due to version conflict on first operation
+      await expect(service.saveEventsTransaction(operations)).rejects.toThrow(ConcurrencyConflictError);
 
-      // Note: Inmemory EventStore rollback is simplified and may not fully restore state
-      // The important thing is that the transaction failed and error was propagated
+      // The second aggregate should not have been created due to rollback
       const finalEvents2 = await service.getEvents(aggregateId2);
       expect(finalEvents2).toHaveLength(0); // This aggregate should not have been created
-
-      // Restore original method
-      service.saveEvents = originalSaveEvents;
     });
 
     it('should handle version conflicts in transactions', async () => {
