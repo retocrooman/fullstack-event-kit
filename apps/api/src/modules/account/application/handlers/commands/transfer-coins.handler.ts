@@ -1,5 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { EventStoreService } from '../../../../cqrs/services/event-store.service';
+import { SelfTransferError } from '../../../domain/account-errors';
 import { AccountAggregate } from '../../../domain/aggregates/account.aggregate';
 import { TransferCoinsCommand } from '../../commands/account.commands';
 
@@ -11,19 +12,14 @@ export class TransferCoinsHandler implements ICommandHandler<TransferCoinsComman
     const { fromAccountId, toAccountId, amount } = command;
     
     if (fromAccountId === toAccountId) {
-      throw new Error('Cannot transfer coins to the same account');
+      throw new SelfTransferError();
     }
     
     // Load FROM account aggregate
     const fromAggregate = new AccountAggregate(fromAccountId);
-    try {
-      const fromEvents = await this.eventStore.getEvents(fromAccountId);
-      if (fromEvents && fromEvents.length > 0) {
-        fromAggregate.loadFromHistory(fromEvents);
-      }
-    } catch (error) {
-      // FROM account must exist for transfers
-      throw new Error(`Account ${fromAccountId} does not exist`);
+    const fromEvents = await this.eventStore.getEvents(fromAccountId);
+    if (fromEvents && fromEvents.length > 0) {
+      fromAggregate.loadFromHistory(fromEvents);
     }
     
     // Execute transfer from FROM account

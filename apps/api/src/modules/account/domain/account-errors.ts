@@ -6,12 +6,6 @@ export abstract class DomainError extends Error {
   }
 }
 
-export class AccountDeletedError extends DomainError {
-  constructor() {
-    super('Cannot operate on deleted account');
-  }
-}
-
 export class InsufficientCoinsError extends DomainError {
   constructor(currentBalance: number, requestedAmount: number) {
     super(`Insufficient coins for operation. Current balance: ${currentBalance}, requested: ${requestedAmount}`);
@@ -33,5 +27,11 @@ export class InvalidTransferError extends DomainError {
 export class AccountNotFoundError extends DomainError {
   constructor(accountId: string) {
     super(`Account ${accountId} does not exist`);
+  }
+}
+
+export class SelfTransferError extends DomainError {
+  constructor() {
+    super('Cannot transfer coins to the same account');
   }
 }

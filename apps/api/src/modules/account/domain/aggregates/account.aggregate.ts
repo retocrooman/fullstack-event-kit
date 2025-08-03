@@ -1,7 +1,5 @@
-import { ConflictException } from '@nestjs/common';
 import { BaseAggregate, DomainEvent } from '../../../cqrs/base/base.aggregate';
 import {
-  AccountDeletedError,
   AccountNotFoundError,
   InsufficientCoinsError,
   InvalidAmountError,
@@ -11,7 +9,6 @@ import {
 export interface AccountState {
   id: string;
   coins: number;
-  isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,38 +24,22 @@ export class AccountAggregate extends BaseAggregate {
     return this.state;
   }
 
-  get isDeleted(): boolean {
-    return this.accountState?.isDeleted || false;
-  }
 
   get coins(): number {
     return this.accountState?.coins || 0;
   }
 
   // Command Handlers
-  CreateAccount(payload: { accountId: string; initialCoins?: number }) {
-    if (this.accountState) {
-      throw new ConflictException(`Account ${payload.accountId} already exists`);
-    }
-
-    this.emitEvent('AccountCreated', {
-      accountId: payload.accountId,
-      initialCoins: payload.initialCoins || 0,
-      timestamp: new Date(),
-    });
-  }
-
   AddCoins(payload: { accountId: string; amount: number }) {
     // Auto-create account if it doesn't exist
     if (!this.accountState) {
-      this.emitEvent('AccountCreated', {
-        accountId: payload.accountId,
-        initialCoins: 0,
-        timestamp: new Date(),
-      });
+      this.state = {
+        id: payload.accountId,
+        coins: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
     }
-
-    this._ensureAccountNotDeleted();
 
     if (payload.amount <= 0) {
       throw new InvalidAmountError(payload.amount, 'must be positive');
@@ -77,14 +58,13 @@ export class AccountAggregate extends BaseAggregate {
   DeductCoins(payload: { accountId: string; amount: number }) {
     // Auto-create account if it doesn't exist
     if (!this.accountState) {
-      this.emitEvent('AccountCreated', {
-        accountId: payload.accountId,
-        initialCoins: 100, // Default initial coins
-        timestamp: new Date(),
-      });
+      this.state = {
+        id: payload.accountId,
+        coins: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
     }
-
-    this._ensureAccountNotDeleted();
 
     if (payload.amount <= 0) {
       throw new InvalidAmountError(payload.amount, 'must be positive');
@@ -104,42 +84,11 @@ export class AccountAggregate extends BaseAggregate {
     });
   }
 
-  SetCoins(payload: { accountId: string; coins: number }) {
-    // Auto-create account if it doesn't exist
-    if (!this.accountState) {
-      this.emitEvent('AccountCreated', {
-        accountId: payload.accountId,
-        initialCoins: 0,
-        timestamp: new Date(),
-      });
-    }
-
-    this._ensureAccountNotDeleted();
-
-    if (payload.coins < 0) {
-      throw new InvalidAmountError(payload.coins, 'cannot be negative');
-    }
-
-    const previousBalance = this.coins;
-    if (previousBalance === payload.coins) {
-      return; // No change needed
-    }
-
-    this.emitEvent('CoinsSet', {
-      accountId: payload.accountId,
-      previousBalance,
-      newBalance: payload.coins,
-      timestamp: new Date(),
-    });
-  }
-
   TransferCoins(payload: { fromAccountId: string; toAccountId: string; amount: number }) {
     // For transfers, account must exist - cannot transfer from non-existent account
     if (!this.accountState || this.accountState.id !== payload.fromAccountId) {
       throw new AccountNotFoundError(payload.fromAccountId);
     }
-
-    this._ensureAccountNotDeleted();
 
     if (payload.amount <= 0) {
       throw new InvalidTransferError('amount must be positive');
@@ -158,33 +107,7 @@ export class AccountAggregate extends BaseAggregate {
     });
   }
 
-  DeleteAccount(payload: { accountId: string }) {
-    // Cannot delete non-existent account
-    if (!this.accountState || this.accountState.id !== payload.accountId) {
-      throw new AccountNotFoundError(payload.accountId);
-    }
-
-    this._ensureAccountNotDeleted();
-
-    const finalBalance = this.coins;
-    this.emitEvent('AccountDeleted', {
-      accountId: payload.accountId,
-      finalBalance,
-      timestamp: new Date(),
-    });
-  }
-
   // Event Handlers (State Mutations)
-  AccountCreated(event: any) {
-    this.state = {
-      id: event.accountId,
-      coins: event.initialCoins || 0,
-      isDeleted: false,
-      createdAt: event.timestamp,
-      updatedAt: event.timestamp,
-    };
-  }
-
   CoinsAdded(event: any) {
     if (!this.state) return;
 
@@ -196,16 +119,6 @@ export class AccountAggregate extends BaseAggregate {
   }
 
   CoinsDeducted(event: any) {
-    if (!this.state) return;
-
-    this.state = {
-      ...this.state,
-      coins: event.newBalance,
-      updatedAt: event.timestamp,
-    };
-  }
-
-  CoinsSet(event: any) {
     if (!this.state) return;
 
     this.state = {
@@ -228,41 +141,17 @@ export class AccountAggregate extends BaseAggregate {
     }
   }
 
-  AccountDeleted(event: any) {
-    if (!this.state) return;
-
-    this.state = {
-      ...this.state,
-      isDeleted: true,
-      updatedAt: event.timestamp,
-    };
-  }
-
-  private _ensureAccountNotDeleted() {
-    if (this.isDeleted) {
-      throw new AccountDeletedError();
-    }
-  }
 
   protected applyEvent(event: DomainEvent, isNew: boolean): void {
     switch (event.eventType) {
-      case 'AccountCreated':
-        this.AccountCreated(event.payload || event);
-        break;
       case 'CoinsAdded':
         this.CoinsAdded(event.payload || event);
         break;
       case 'CoinsDeducted':
         this.CoinsDeducted(event.payload || event);
         break;
-      case 'CoinsSet':
-        this.CoinsSet(event.payload || event);
-        break;
       case 'CoinsTransferred':
         this.CoinsTransferred(event.payload || event);
-        break;
-      case 'AccountDeleted':
-        this.AccountDeleted(event.payload || event);
         break;
       default:
         console.warn(`Unknown event type: ${event.eventType}`);

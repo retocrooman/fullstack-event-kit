@@ -1,11 +1,12 @@
-import { Controller, Post, Put, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { User } from '../../../../shared/decorators/user.decorator';
 import { 
-  SetCoinsCommand, 
-  TransferCoinsCommand, 
-  DeleteAccountCommand
+  AddCoinsCommand,
+  DeductCoinsCommand,
+  TransferCoinsCommand
 } from '../../application/commands/account.commands';
+import { SelfTransferError } from '../../domain/account-errors';
 
 @Controller('accounts')
 export class AccountCommandController {
@@ -13,12 +14,25 @@ export class AccountCommandController {
     private readonly commandBus: CommandBus,
   ) {}
 
-  @Put(':id')
-  async updateAccount(
-    @Param('id') id: string, 
-    @Body() updateAccountDto: { coins: number }
+  @Post('add-coins')
+  async addCoins(
+    @User() user: any, 
+    @Body() addCoinsDto: { amount: number }
   ) {
-    const command = SetCoinsCommand.fromRequest({ accountId: id, coins: updateAccountDto.coins });
+    const accountId = user.sub; // Current user's Auth0 ID
+    const command = AddCoinsCommand.fromRequest({ accountId, amount: addCoinsDto.amount });
+    await this.commandBus.execute(command);
+
+    return { success: true };
+  }
+
+  @Post('deduct-coins')
+  async deductCoins(
+    @User() user: any, 
+    @Body() deductCoinsDto: { amount: number }
+  ) {
+    const accountId = user.sub; // Current user's Auth0 ID
+    const command = DeductCoinsCommand.fromRequest({ accountId, amount: deductCoinsDto.amount });
     await this.commandBus.execute(command);
 
     return { success: true };
@@ -32,7 +46,7 @@ export class AccountCommandController {
     const fromAccountId = user.sub; // Current user's Auth0 ID
 
     if (fromAccountId === transferCoinsDto.toAccountId) {
-      throw new Error('Cannot transfer coins to the same account');
+      throw new SelfTransferError();
     }
 
     const command = TransferCoinsCommand.fromRequest({
@@ -46,12 +60,5 @@ export class AccountCommandController {
       success: true,
       transferId: `transfer_${Date.now()}_${fromAccountId}_${transferCoinsDto.toAccountId}`,
     };
-  }
-
-  @Delete(':id')
-  async deleteAccount(@Param('id') id: string) {
-    const command = DeleteAccountCommand.fromRequest({ accountId: id });
-    await this.commandBus.execute(command);
-    return { success: true };
   }
 }
