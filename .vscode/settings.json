@@ -15,5 +15,5 @@
   "biome.enabled": false,
 
   // cSpell settings
-  "cSpell.words": ["deepseek", "ollama", "eventstore"]
+  "cSpell.words": ["deepseek", "eventstore", "inmemory", "ollama"]
 }
