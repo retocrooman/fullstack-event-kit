@@ -29,17 +29,20 @@ export class AccountAggregate extends BaseAggregate {
     return this.accountState?.coins || 0;
   }
 
-  // Command Handlers
-  AddCoins(payload: { accountId: string; amount: number }) {
-    // Auto-create account if it doesn't exist
+  private _ensureAccountExists(accountId: string): void {
     if (!this.accountState) {
       this.state = {
-        id: payload.accountId,
+        id: accountId,
         coins: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
     }
+  }
+
+  // Command Handlers
+  AddCoins(payload: { accountId: string; amount: number }) {
+    this._ensureAccountExists(payload.accountId);
 
     if (payload.amount <= 0) {
       throw new InvalidAmountError(payload.amount, 'must be positive');
@@ -56,15 +59,7 @@ export class AccountAggregate extends BaseAggregate {
   }
 
   DeductCoins(payload: { accountId: string; amount: number }) {
-    // Auto-create account if it doesn't exist
-    if (!this.accountState) {
-      this.state = {
-        id: payload.accountId,
-        coins: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-    }
+    this._ensureAccountExists(payload.accountId);
 
     if (payload.amount <= 0) {
       throw new InvalidAmountError(payload.amount, 'must be positive');
@@ -85,8 +80,8 @@ export class AccountAggregate extends BaseAggregate {
   }
 
   TransferCoins(payload: { fromAccountId: string; toAccountId: string; amount: number }) {
-    // For transfers, account must exist - cannot transfer from non-existent account
-    if (!this.accountState || this.accountState.id !== payload.fromAccountId) {
+    // For transfers, FROM account must exist - cannot transfer from non-existent account
+    if (!this.accountState) {
       throw new AccountNotFoundError(payload.fromAccountId);
     }
 

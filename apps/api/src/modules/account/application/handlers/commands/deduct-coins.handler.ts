@@ -11,14 +11,9 @@ export class DeductCoinsHandler implements ICommandHandler<DeductCoinsCommand> {
     const { accountId, amount } = command;
     
     const aggregate = new AccountAggregate(accountId);
-    
-    try {
-      const events = await this.eventStore.getEvents(accountId);
-      if (events && events.length > 0) {
-        aggregate.loadFromHistory(events);
-      }
-    } catch (error) {
-      // Aggregate doesn't exist, will be auto-created in business logic
+    const events = await this.eventStore.getEvents(accountId);
+    if (events && events.length > 0) {
+      aggregate.loadFromHistory(events);
     }
     
     aggregate.DeductCoins({ accountId, amount });

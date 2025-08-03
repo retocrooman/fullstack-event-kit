@@ -12,14 +12,9 @@ export class AddCoinsHandler implements ICommandHandler<AddCoinsCommand> {
     
     // Load existing aggregate
     const aggregate = new AccountAggregate(accountId);
-    
-    try {
-      const events = await this.eventStore.getEvents(accountId);
-      if (events && events.length > 0) {
-        aggregate.loadFromHistory(events);
-      }
-    } catch (error) {
-      // Aggregate doesn't exist, will be auto-created in business logic
+    const events = await this.eventStore.getEvents(accountId);
+    if (events && events.length > 0) {
+      aggregate.loadFromHistory(events);
     }
     
     // Execute the business logic

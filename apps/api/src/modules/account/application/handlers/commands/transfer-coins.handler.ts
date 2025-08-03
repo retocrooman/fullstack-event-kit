@@ -34,13 +34,9 @@ export class TransferCoinsHandler implements ICommandHandler<TransferCoinsComman
     
     // Load TO account aggregate
     const toAggregate = new AccountAggregate(toAccountId);
-    try {
-      const toEvents = await this.eventStore.getEvents(toAccountId);
-      if (toEvents && toEvents.length > 0) {
-        toAggregate.loadFromHistory(toEvents);
-      }
-    } catch (error) {
-      // TO account can be auto-created
+    const toEvents = await this.eventStore.getEvents(toAccountId);
+    if (toEvents && toEvents.length > 0) {
+      toAggregate.loadFromHistory(toEvents);
     }
     
     // Add coins to TO account
