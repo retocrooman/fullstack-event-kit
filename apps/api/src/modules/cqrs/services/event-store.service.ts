@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { EventStore } from '../types/eventstore.types';
+import { EventStore } from '../cqrs-types';
 import { InmemoryStoreService } from './inmemory-store.service';
 import { MongoDbStoreService } from './mongo-db-store.service';
 

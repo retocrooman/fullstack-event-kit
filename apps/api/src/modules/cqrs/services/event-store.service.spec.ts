@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConcurrencyConflictError } from '../errors/concurrency-conflict.error';
+import { ConcurrencyConflictError } from '../cqrs-errors';
 import { EventStoreService } from './event-store.service';
 
 describe('EventStoreService', () => {

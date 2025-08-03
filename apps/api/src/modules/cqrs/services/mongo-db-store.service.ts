@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { ConcurrencyConflictError } from '../errors/concurrency-conflict.error';
-import { EventStore } from '../types/eventstore.types';
+import { ConcurrencyConflictError } from '../cqrs-errors';
+import { EventStore } from '../cqrs-types';
 
 @Injectable()
 export class MongoDbStoreService {
