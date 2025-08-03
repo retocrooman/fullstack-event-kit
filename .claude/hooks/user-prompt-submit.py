@@ -50,6 +50,13 @@ def check_prompt_against_rules(prompt):
                 "message": "Consider updating README.md when adding new features or changing architecture"
             })
     
+    # Check for commit message format
+    if re.search(r'commit', prompt, re.IGNORECASE):
+        violations.append({
+            "rule": "Commit Message Format",
+            "message": "Use conventional commits: <type>: <description> (feat/fix/refactor/etc), imperative mood, <72 chars, no period"
+        })
+    
     return violations
 
 def main():
@@ -80,6 +87,7 @@ def main():
 4. Use EnvConfig for environment variables
 5. Edit existing files instead of creating new ones
 6. Update README.md when adding features or changing architecture
+7. Commit format: <type>: <description> (imperative, <72 chars, no period)
 
 Continue with your request, but ensure compliance with these rules.
 """
