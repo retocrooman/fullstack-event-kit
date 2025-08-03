@@ -1,97 +1,80 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { ConcurrencyConflictError } from '../../account/domain/account-errors';
+import { EventStore } from '../types/eventstore.types';
 
-/**
- * EventStoreService provides a high-level interface for event sourcing operations.
- *
- * This service wraps the node-eventstore library to offer:
- * - Event persistence: Saves domain events to MongoDB storage
- * - Event retrieval: Loads event history for specific aggregates
- * - Stream management: Handles event stream creation, appending, and committing
- * - Health monitoring: Provides connection status for health checks
- *
- * The service uses dependency injection to receive a configured eventstore instance
- * and provides Promise-based methods for async operations with proper error handling.
- *
- * Key operations:
- * - getEvents(aggregateId): Retrieves all events for a specific aggregate
- * - saveEvents(aggregateId, events): Persists new events to an aggregate's stream
- * - getAllAggregateIds(): Lists all known aggregate identifiers (simplified implementation)
- * - getEventStore(): Returns the underlying eventstore instance for advanced operations
- */
 @Injectable()
 export class EventStoreService {
-  private eventStorePromise: Promise<any>;
-  private aggregateStreams = new Map<string, any[]>();
-
   constructor(
     @Inject('EVENT_STORE')
-    eventStore: Promise<any>,
-  ) {
-    this.eventStorePromise = eventStore;
-  }
+    private eventStore: Promise<EventStore>,
+  ) {}
 
   async getEvents(aggregateId: string): Promise<any[]> {
-    const eventStore = await this.eventStorePromise;
+    const eventStore = await this.eventStore;
     return new Promise((resolve, reject) => {
       eventStore.getEventStream(aggregateId, (err, stream) => {
-        if (err) {
-          // If stream doesn't exist, return empty array
-          if (err.message && err.message.includes('not found')) {
-            resolve([]);
-          } else {
-            reject(err);
-          }
-          return;
-        }
-
-        // Get all events from the stream
-        const events = stream.events || [];
-        resolve(events);
-      });
-    });
-  }
-
-  async saveEvents(aggregateId: string, events: any[]): Promise<void> {
-    const eventStore = await this.eventStorePromise;
-    return new Promise((resolve, reject) => {
-      eventStore.getEventStream(aggregateId, (err, stream) => {
-        if (err) {
+        if (err?.message?.includes('not found') || !stream) {
+          resolve([]);
+        } else if (err) {
           reject(err);
-          return;
+        } else {
+          resolve(stream.events || []);
         }
-
-        // Add each event to the stream
-        events.forEach(event => {
-          stream.addEvent(event);
-        });
-
-        // Commit the stream
-        stream.commit(commitErr => {
-          if (commitErr) {
-            reject(commitErr);
-          } else {
-            resolve();
-          }
-        });
       });
     });
   }
 
-  async getAllAggregateIds(aggregateType?: string): Promise<string[]> {
-    // node-eventstore doesn't provide a direct way to get all aggregate IDs
-    // This is a simplified implementation that maintains a registry
-    // In a real scenario, you might need to query the underlying storage directly
+  async saveEventsTransaction(operations: Array<{ aggregateId: string; events: any[] }>): Promise<void> {
+    const validOperations = operations.filter(op => op.events.length > 0);
+    if (validOperations.length === 0) return;
+
+    const eventStore = await this.eventStore;
+    const client = eventStore.store?.client || eventStore.client;
+
+    if (!client) throw new Error('Client not available for transactions');
+
+    const session = client.startSession();
     try {
-      // For now, return empty array - this would need to be implemented
-      // based on the specific storage backend being used
-      return Array.from(this.aggregateStreams.keys());
-    } catch (error) {
-      console.warn('Could not retrieve aggregate IDs:', error);
-      return [];
+      await session.withTransaction(async () => {
+        for (const { aggregateId, events } of validOperations) {
+          await this.saveEventsWithSession(eventStore, aggregateId, events, session);
+        }
+      });
+    } finally {
+      await session.endSession();
     }
   }
 
-  async getEventStore() {
-    return await this.eventStorePromise;
+  private async saveEventsWithSession(
+    eventStore: EventStore,
+    aggregateId: string,
+    events: any[],
+    session: any,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // Get current stream version for optimistic concurrency control
+      eventStore.getEventStream(aggregateId, { useTransaction: true, session }, (err, stream) => {
+        if (err || !stream) {
+          reject(err || new Error('Stream not available for transaction'));
+          return;
+        }
+
+        // Check version conflicts - expectedVersion should match current stream version
+        const currentVersion = stream.lastRevision || stream.currentRevision || 0;
+        const expectedVersion = events.length > 0 ? events[0].version - 1 : currentVersion;
+
+        if (expectedVersion !== currentVersion) {
+          reject(new ConcurrencyConflictError(aggregateId, expectedVersion, currentVersion));
+          return;
+        }
+
+        events.forEach(event => stream.addEvent(event));
+        stream.commit({ session }, commitErr => (commitErr ? reject(commitErr) : resolve()));
+      });
+    });
+  }
+
+  async getEventStore(): Promise<EventStore> {
+    return this.eventStore;
   }
 }

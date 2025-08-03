@@ -35,3 +35,15 @@ export class SelfTransferError extends DomainError {
     super('Cannot transfer coins to the same account');
   }
 }
+
+export class TransferTransactionError extends DomainError {
+  constructor(reason: string) {
+    super(`Transfer transaction failed: ${reason}`);
+  }
+}
+
+export class ConcurrencyConflictError extends DomainError {
+  constructor(aggregateId: string, expectedVersion: number, actualVersion: number) {
+    super(`Concurrency conflict for aggregate ${aggregateId}: expected version ${expectedVersion}, but actual version is ${actualVersion}`);
+  }
+}

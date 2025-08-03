@@ -29,6 +29,8 @@ export abstract class BaseAggregate extends AggregateRoot {
   }
 
   loadFromHistory(events: DomainEvent[]): void {
+    if (events.length === 0) return;
+
     events.forEach(event => {
       // Validate event belongs to this aggregate
       if (event.aggregateId !== this.aggregateId) {
@@ -44,16 +46,22 @@ export abstract class BaseAggregate extends AggregateRoot {
 
   getDomainEvents(): readonly DomainEvent[] {
     // Convert NestJS CQRS events to our DomainEvent interface
-    return super.getUncommittedEvents().map((event: any) => ({
+    const uncommittedEvents = super.getUncommittedEvents();
+    return uncommittedEvents.map((event: any, index: number) => ({
       aggregateId: this.aggregateId,
       eventType: event.constructor.name,
       payload: event,
-      version: this.version,
+      version: this.version + index + 1, // Each new event gets incremental version
       timestamp: new Date(),
     }));
   }
 
   markEventsAsCommitted(): void {
+    const uncommittedEvents = this.getDomainEvents();
+    if (uncommittedEvents.length > 0) {
+      // Update version to the latest event version
+      this.version = uncommittedEvents[uncommittedEvents.length - 1].version;
+    }
     // Clear the uncommitted events from the base AggregateRoot
     this.commit();
   }
