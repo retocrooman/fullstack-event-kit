@@ -14,9 +14,7 @@ export abstract class BaseAggregate extends AggregateRoot {
 
   constructor(aggregateId: string) {
     super();
-    if (!aggregateId) {
-      throw new Error('Aggregate ID is required');
-    }
+    if (!aggregateId) throw new Error('Aggregate ID is required');
     this.aggregateId = aggregateId;
   }
 
@@ -35,10 +33,10 @@ export abstract class BaseAggregate extends AggregateRoot {
       // Validate event belongs to this aggregate
       if (event.aggregateId !== this.aggregateId) {
         throw new Error(
-          `Event aggregate ID ${event.aggregateId} does not match current aggregate ID ${this.aggregateId}`
+          `Event aggregate ID ${event.aggregateId} does not match current aggregate ID ${this.aggregateId}`,
         );
       }
-      
+
       this.applyEvent(event, false);
       this.version = Math.max(this.version, event.version);
     });
@@ -67,8 +65,6 @@ export abstract class BaseAggregate extends AggregateRoot {
   }
 
   protected emitEvent(eventType: string, payload: Record<string, unknown>): void {
-    const nextVersion = this.version + 1;
-    
     const event: DomainEvent = {
       aggregateId: this.aggregateId,
       eventType,
@@ -77,17 +73,15 @@ export abstract class BaseAggregate extends AggregateRoot {
         aggregateId: this.aggregateId,
         timestamp: new Date(),
       },
-      version: nextVersion,
+      version: 0, // Will be set properly in getDomainEvents
       timestamp: new Date(),
     };
 
     // Apply the event to update internal state
     this.applyEvent(event, true);
-    
+
     // Track as uncommitted event for persistence
     this.apply(event);
-    
-    this.version = nextVersion;
   }
 
   protected abstract applyEvent(event: DomainEvent, isNew: boolean): void;

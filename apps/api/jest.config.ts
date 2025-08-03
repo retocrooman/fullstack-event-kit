@@ -11,6 +11,7 @@ const config: Config = {
       preset: 'ts-jest',
       testEnvironment: '@quramy/jest-prisma-node/environment',
       testMatch: ['<rootDir>/src/**/*.spec.ts'],
+      testPathIgnorePatterns: ['.integration.spec.ts'],
       collectCoverageFrom: ['src/**/*.ts', '!src/**/*.spec.ts', '!src/main.ts'],
       transformIgnorePatterns: ['node_modules/(?!(.*\\.mjs$|jose))'],
       setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
