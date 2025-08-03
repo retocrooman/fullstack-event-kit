@@ -1,5 +1,5 @@
-import { INestApplication } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+import type { INestApplication } from '@nestjs/common';
+import { Test, type TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 
@@ -62,15 +62,15 @@ describe('Health Check (e2e)', () => {
       .expect(res => {
         expect(res.body.status).toBe('ok');
         expect(res.body.info).toBeDefined();
-        
+
         // Check API health
         expect(res.body.info.api).toBeDefined();
         expect(res.body.info.api.status).toBe('up');
-        
+
         // Check PostgreSQL database health
         expect(res.body.info.database).toBeDefined();
         expect(res.body.info.database.status).toBe('up');
-        
+
         // Check MongoDB eventstore health
         expect(res.body.info.mongodb).toBeDefined();
         expect(res.body.info.mongodb.status).toBe('up');
