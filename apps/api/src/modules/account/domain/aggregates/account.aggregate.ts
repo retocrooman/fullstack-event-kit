@@ -79,6 +79,24 @@ export class AccountAggregate extends BaseAggregate {
     });
   }
 
+  ReceiveCoins(payload: { accountId: string; fromAccountId: string; amount: number }) {
+    this._ensureAccountExists(payload.accountId);
+
+    if (payload.amount <= 0) {
+      throw new InvalidAmountError(payload.amount, 'must be positive');
+    }
+
+    const previousBalance = this.coins;
+    this.emitEvent('CoinsReceived', {
+      accountId: payload.accountId,
+      fromAccountId: payload.fromAccountId,
+      amount: payload.amount,
+      previousBalance,
+      newBalance: previousBalance + payload.amount,
+      timestamp: new Date(),
+    });
+  }
+
   TransferCoins(payload: { fromAccountId: string; toAccountId: string; amount: number }) {
     // For transfers, FROM account must exist - cannot transfer from non-existent account
     if (!this.accountState) {
@@ -123,6 +141,16 @@ export class AccountAggregate extends BaseAggregate {
     };
   }
 
+  CoinsReceived(event: any) {
+    if (!this.state) return;
+
+    this.state = {
+      ...this.state,
+      coins: event.newBalance,
+      updatedAt: event.timestamp,
+    };
+  }
+
   CoinsTransferred(event: any) {
     if (!this.state) return;
 
@@ -144,6 +172,9 @@ export class AccountAggregate extends BaseAggregate {
         break;
       case 'CoinsDeducted':
         this.CoinsDeducted(event.payload || event);
+        break;
+      case 'CoinsReceived':
+        this.CoinsReceived(event.payload || event);
         break;
       case 'CoinsTransferred':
         this.CoinsTransferred(event.payload || event);

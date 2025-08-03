@@ -23,6 +23,19 @@ export interface CoinsDeductedEvent {
   };
 }
 
+export interface CoinsReceivedEvent {
+  type: 'CoinsReceived';
+  aggregateId: string;
+  payload: {
+    accountId: string;
+    fromAccountId: string;
+    amount: number;
+    previousBalance: number;
+    newBalance: number;
+    timestamp: Date;
+  };
+}
+
 export interface CoinsTransferredEvent {
   type: 'CoinsTransferred';
   aggregateId: string;
@@ -37,4 +50,5 @@ export interface CoinsTransferredEvent {
 export type AccountDomainEvent = 
   | CoinsAddedEvent
   | CoinsDeductedEvent
+  | CoinsReceivedEvent
   | CoinsTransferredEvent;

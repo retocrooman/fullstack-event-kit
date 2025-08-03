@@ -39,8 +39,8 @@ export class TransferCoinsHandler implements ICommandHandler<TransferCoinsComman
       toAggregate.loadFromHistory(toEvents);
     }
     
-    // Add coins to TO account
-    toAggregate.AddCoins({ accountId: toAccountId, amount });
+    // Receive coins to TO account
+    toAggregate.ReceiveCoins({ accountId: toAccountId, fromAccountId, amount });
     
     // Save TO account events
     const toUncommittedEvents = toAggregate.getDomainEvents();
