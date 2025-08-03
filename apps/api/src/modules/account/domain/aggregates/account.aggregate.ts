@@ -6,7 +6,7 @@ import {
   InsufficientCoinsError,
   InvalidAmountError,
   InvalidTransferError,
-} from '../errors';
+} from '../account-errors';
 
 export interface AccountState {
   id: string;
